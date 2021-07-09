@@ -8,6 +8,7 @@ import * as protoHeader from 'sensible-sdk/dist/common/protoheader'
 import { getCodeHash } from 'sensible-sdk/dist/common/utils';
 import * as util from './util'
 import * as Sentry from "@sentry/react";
+import customSatotxList from './customSatotx.json'
 
 function getSensibleApiPrefix(network: NetWork) {
     const test = network === NetWork.Mainnet ? '' : '/test'
@@ -261,7 +262,28 @@ const mapBsvFeeError = (err: Error) => {
     }
     return err
 }
+const getCustomSigners = (codehash: string, genesis: string):SensibleSatotx[] => {
+    const findValue = customSatotxList.find(item => item.codehash === codehash && item.genesis === genesis)
+    if (findValue) {
+        return findValue.satotxList
+    }
+    return []
+}
+const selectNotNullSigners = (...signerList: SensibleSatotx[][]): SensibleSatotx[] =>  {
+    for (let signers of signerList) {
+        if (signers && signers.length > 0) {
+            return signers
+        }
+    }
+    return []
+}
 export async function transferSensibleFt(network: NetWork, signers: SensibleSatotx[], senderWif: string, receivers: TransferReceiver[], codehash: string, genesis: string, utxos: any = false, noBroadcast: boolean = false){
+    
+    const customSigner = getCustomSigners(codehash, genesis)
+    signers = selectNotNullSigners(signers, customSigner)
+
+    console.log('signers', signers)
+    
     const selectRes = signers && signers.length > 0 ? await SensibleFT.selectSigners(signers) : await SensibleFT.selectSigners();
     // const selectRes = await SensibleFT.selectSigners();
 
