@@ -583,8 +583,14 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
       }
 
       for (const tx of txs) {
-        const res = await broadcastSensibleQeury(account.network, tx.serialize(true))
-        transferRes.push(res)
+        const txHex = tx.serialize(true)
+        const res = await broadcastSensibleQeury(account.network, txHex)
+        const txParseRes = parseTransaction(account.network, txHex)
+        transferRes.push({
+          txid: res,
+          outputs: txParseRes.outputs,
+          fee: tx.getFee(),
+        })
       }
 
       setLoading(false);
