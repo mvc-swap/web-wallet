@@ -548,7 +548,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
             return message.error(msg)
           }
           const output = tx.outputs[outputIndex];
-          txs.push(tx);
+          txs.push([tx, true]);
           utxos = [];
           utxos.push({
             txId: tx.id,
@@ -567,8 +567,8 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
               utxos,
               noBroadcast: true
             });
-          txs.push(routeCheckTx);
-          txs.push(tx);
+          txs.push([routeCheckTx, false]);
+          txs.push([tx, true]);
           const outputIndex = tx.outputs.length - 1;
           const output = tx.outputs[outputIndex];
           utxos = [];
@@ -582,15 +582,18 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
         }
       }
 
-      for (const tx of txs) {
+      for (const txInfo of txs) {
+        const tx = txInfo[0]
         const txHex = tx.serialize(true)
         const res = await broadcastSensibleQeury(account.network, txHex)
-        const txParseRes = parseTransaction(account.network, txHex)
-        transferRes.push({
-          txid: res,
-          outputs: txParseRes.outputs,
-          fee: tx.getFee(),
-        })
+        if (txInfo[1] === true) {
+          const txParseRes = parseTransaction(account.network, txHex)
+          transferRes.push({
+            txid: res,
+            outputs: txParseRes.outputs,
+            fee: tx.getFee(),
+          })
+        }
       }
 
       setLoading(false);
