@@ -142,8 +142,7 @@ export async function getAddressSensibleFtListByPage(network: NetWork, address: 
 }
 
 // 获取 bsv utxo
-export async function getAddressBsvUtxoList(network: NetWork, address: string, page: number): Promise<BsvUtxo[]> {
-    const pageSize = 16
+export async function getAddressBsvUtxoList(network: NetWork, address: string, page: number, pageSize: number=16): Promise<BsvUtxo[]> {
     const cursor = (page - 1) * pageSize
     const apiPrefix = getSensibleApiPrefix(network)
     const {data} = await axios.get(`${apiPrefix}/address/${address}/utxo?cursor=${cursor}&size=${pageSize}`)
@@ -440,7 +439,7 @@ function checkBsvReceiversSatisfied(receivers: TransferReceiver[], tx: any, netw
     }
     return satified
 }
-export async function transferBsv(network: NetWork, senderWif: string, receivers: TransferReceiver[], noBroadcast: boolean=false) {
+export async function transferBsv(network: NetWork, senderWif: string, receivers: TransferReceiver[], noBroadcast: boolean=false, allUtxos: boolean=false) {
     // 1. 获取用户 utxo 列表
     // 2. 判断 utxo 金额 是否 满足 receivers 金额
     // 3. 构造交易
@@ -462,8 +461,9 @@ export async function transferBsv(network: NetWork, senderWif: string, receivers
     // input = output + fee + change
     // 异常情况: 加上 change 后, fee 增加, 原本 input 不够了, 此时将所有输出移除, 然后，暂不考虑
     
+    const pageSize = 16
     for (let page = 1; ;page++) {
-        const utxoResList = await getAddressBsvUtxoList(network, address, page)
+        const utxoResList = await getAddressBsvUtxoList(network, address, page, pageSize)
         for (let i = 0; i < utxoResList.length; i++) {
             const item = utxoResList[i]
             utxoValue = util.plus(utxoValue, item.satoshis)
@@ -479,14 +479,14 @@ export async function transferBsv(network: NetWork, senderWif: string, receivers
                     script: bsv.Script.empty(),
                 })
             );
-            if (util.lessThanEqual(util.plus(totalOutput, dust), utxoValue)) {
+            if (!allUtxos && util.lessThanEqual(util.plus(totalOutput, dust), utxoValue)) {
                 break
             }
         }
-        if (util.lessThanEqual(util.plus(totalOutput, dust), utxoValue)) {
+        if (!allUtxos && util.lessThanEqual(util.plus(totalOutput, dust), utxoValue)) {
             break
         }
-        if (utxoResList.length <= 0 ) {
+        if (utxoResList.length <= pageSize) {
             break
         }
     }

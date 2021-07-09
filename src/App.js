@@ -427,11 +427,13 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
       let txid = "";
       try {
         if (noBroadcast === true) {
+          const allUtxos = true
           const tx = await await transferBsv(
             account.network,
             key.privateKey,
             formatReceiverList,
-            noBroadcast
+            noBroadcast,
+            allUtxos
           );
           return tx
         }
