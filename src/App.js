@@ -22,6 +22,7 @@ import {
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import * as QRCode from "qrcode.react";
+import { bsv } from 'scryptlib';
 import {
   getWocAddressUrl,
   formatValue,
@@ -31,6 +32,7 @@ import {
   getWocTransactionUrl,
   getSensibleFtHistoryUrl,
   parseTransaction,
+  broadcastSensibleQeury,
 } from "./lib";
 import * as createPostMsg from "post-msg";
 import { useGlobalState } from "./state/state";
@@ -41,7 +43,7 @@ import * as util from "./lib/util";
 import * as Sentry from "@sentry/react";
 import axios from 'axios';
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+//const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const { Option } = Select;
 
 function Header() {
@@ -419,15 +421,24 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
   const handleSubmit = async () => {
     const receiverLists = form.getFieldsValue();
 
-    const broadcastBsv = async ({ formatReceiverList }) => {
+    const broadcastBsv = async ({ formatReceiverList, noBroadcast }) => {
       setLoading(true);
       let transferRes;
       let txid = "";
       try {
+        if (noBroadcast === true) {
+          const tx = await await transferBsv(
+            account.network,
+            key.privateKey,
+            formatReceiverList,
+            noBroadcast
+          );
+          return tx
+        }
         const res = await await transferBsv(
           account.network,
           key.privateKey,
-          formatReceiverList
+          formatReceiverList,
         );
         transferRes = res;
         txid = res.txid;
@@ -451,7 +462,9 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
       token,
       decimal,
       genesis,
-      rabinApis
+      rabinApis,
+      utxos,
+      noBroadcast
     }) => {
       setLoading(true);
       let transferRes;
@@ -465,7 +478,9 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
           key.privateKey,
           formatReceiverList,
           token.codehash,
-          token.genesis
+          token.genesis,
+          utxos,
+          noBroadcast || false
         );
         transferRes = res;
       } catch (err) {
@@ -483,7 +498,102 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
       return transferRes;
     };
 
-    const broadcastAll = async () => {
+    const broadcastBsvAndToken = async () => {
+      const txs = [];
+      const transferRes = [];
+      let utxos = [];
+      // bsv transaction must be the first one
+      for (let i = 0; i < initDatas.length; i++) {
+        const data = initDatas[i];
+        const isBsv = !data.genesis;
+        const token = sensibleFtList.find(
+          (item) => item.genesis === data.genesis
+        );
+        const decimal = isBsv ? 8 : token.tokenDecimal;
+        const balance = isBsv ? bsvBalance.balance : token.balance;
+        const rabinApis = data.rabinApis;
+        const totalOutputValueFloatDuck = receiverLists[
+          `receiverList${i}`
+        ].reduce((prev, cur) => util.plus(prev, cur.amount), 0);
+
+        const totalOutputValue = util.multi(
+          totalOutputValueFloatDuck,
+          util.getDecimalString(decimal)
+        );
+        if (util.lessThan(balance, totalOutputValue)) {
+          const msg = "Insufficient ft balance";
+          onTransferCallback({
+            error: msg,
+          });
+          return message.error(msg);
+        }
+        const formatReceiverList = data.receivers.map((item) => {
+          return {
+            address: item.address,
+            // amount: util.multi(item.amount, util.getDecimalString(decimal)),
+            amount: item.amount,
+          };
+        });
+        if (isBsv) {
+          const tx = await broadcastBsv({ formatReceiverList, noBroadcast: true });
+          const outputIndex = tx.outputs.length - 1;
+          //TODO: check res outputs
+          if (outputIndex !== 1) {
+            const msg = "Insufficient ft balance";
+            onTransferCallback({
+              error: msg,
+            });
+            return message.error(msg)
+          }
+          const output = tx.outputs[outputIndex];
+          txs.push(tx);
+          utxos = [];
+          utxos.push({
+            txId: tx.id,
+            outputIndex,
+            satoshis: output.satoshis,
+            wif: key.privateKey,
+            address: new bsv.PrivateKey(key.privateKey, account.network).toAddress(account.network),
+          });
+        } else {
+          const {routeCheckTx, tx} = await broadcastSensibleFt({
+              formatReceiverList,
+              token,
+              decimal,
+              genesis: data.genesis,
+              rabinApis,
+              utxos,
+              noBroadcast: true
+            });
+          txs.push(routeCheckTx);
+          txs.push(tx);
+          const outputIndex = tx.outputs.length - 1;
+          const output = tx.outputs[outputIndex];
+          utxos = [];
+          utxos.push({
+            txId: tx.id,
+            outputIndex,
+            satoshis: output.satoshis,
+            wif: key.privateKey,
+            address: new bsv.PrivateKey(key.privateKey, account.network).toAddress(account.network),
+          });
+        }
+      }
+
+      for (const tx of txs) {
+        const res = await broadcastSensibleQeury(account.network, tx.serialize(true))
+        transferRes.push(res)
+      }
+
+      setLoading(false);
+      onTransferCallback({
+        response: {
+          ...transferRes,
+        },
+      });
+    };
+
+    /*const broadcastAll = async () => {
       const transferRes = [];
       for (let i = 0; i < initDatas.length; i++) {
         const data = initDatas[i];
@@ -537,12 +647,13 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
           ...transferRes,
         },
       });
-    };
+    };*/
 
     Modal.confirm({
       title: "Confirm the transaction",
       onOk: () => {
-        broadcastAll();
+        //broadcastAll();
+        broadcastBsvAndToken();
       },
     });
   };

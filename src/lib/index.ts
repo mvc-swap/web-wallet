@@ -262,7 +262,7 @@ const mapBsvFeeError = (err: Error) => {
     }
     return err
 }
-export async function transferSensibleFt(network: NetWork, signers: SensibleSatotx[], senderWif: string, receivers: TransferReceiver[], codehash: string, genesis: string, ){
+export async function transferSensibleFt(network: NetWork, signers: SensibleSatotx[], senderWif: string, receivers: TransferReceiver[], codehash: string, genesis: string, utxos: any = false, noBroadcast: boolean = false){
     const selectRes = signers && signers.length > 0 ? await SensibleFT.selectSigners(signers) : await SensibleFT.selectSigners();
     // const selectRes = await SensibleFT.selectSigners();
 
@@ -276,12 +276,17 @@ export async function transferSensibleFt(network: NetWork, signers: SensibleSato
     console.log('transferSensibleFt', receivers, network, codehash, genesis, signers)
 
     try {
-        const {txid, tx} = await ft.transfer({
+        const {txid, tx, routeCheckTx} = await ft.transfer({
             senderWif: senderWif,
             receivers,
             codehash,
             genesis,
+            utxos: utxos,
+            noBroadcast,
         })
+        if (noBroadcast === true) {
+            return {tx, routeCheckTx}
+        }
         util.checkFeeRate(tx)
         const txParseRes = parseTransaction(network, tx.serialize(true))
         return {
@@ -435,7 +440,7 @@ function checkBsvReceiversSatisfied(receivers: TransferReceiver[], tx: any, netw
     }
     return satified
 }
-export async function transferBsv(network: NetWork, senderWif: string, receivers: TransferReceiver[]) {
+export async function transferBsv(network: NetWork, senderWif: string, receivers: TransferReceiver[], noBroadcast: boolean=false) {
     // 1. 获取用户 utxo 列表
     // 2. 判断 utxo 金额 是否 满足 receivers 金额
     // 3. 构造交易
@@ -510,6 +515,9 @@ export async function transferBsv(network: NetWork, senderWif: string, receivers
         unlockP2PKHInput(privateKey, tx, inputIndex, sighashType);
     });
     util.checkFeeRate(tx)
+    if (noBroadcast === true) {
+        return tx
+    }
     const txid = await broadcastSensibleQeury(network, tx.serialize())
     const txParseRes = parseTransaction(network, tx.serialize(true))
 
