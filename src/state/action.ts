@@ -2,6 +2,7 @@ import {setGlobalState, getGlobalState } from './state'
 import {generateKeysFromEmailPassword, getAddressSensibleFtList, getAddressBsvBalanceByUtxo} from '../lib'
 import {Account, BalanceBsv, Key, SensibleFt} from './stateType'
 import * as createPostMsg from 'post-msg';
+import { SensibleFT } from 'sensible-sdk';
 
 // local account storage
 const accountStorageKey = 'accountStorageKey'
@@ -19,8 +20,8 @@ function getAccountStorage(): Account | null {
     return JSON.parse(str)
 }
 
-function isSupportToken(codehash: String) {
-    return codehash === '514776383faa66e4a65808904d4d6724e4774fbe'
+function isSupportToken(codehash: string) {
+    return SensibleFT.isSupportedToken(codehash)
 }
 
 // app action

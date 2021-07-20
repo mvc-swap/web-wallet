@@ -3,9 +3,6 @@ import { NetWork } from '../web3';
 import {Key, SensibleFt, SensibleSatotx, TransferReceiver, BsvUtxo} from '../state/stateType'
 import axios from 'axios'
 import {SensibleFT} from 'sensible-sdk'
-import * as tokenProto from 'sensible-sdk/dist/bcp02/tokenProto'
-import * as protoHeader from 'sensible-sdk/dist/common/protoheader'
-import { getCodeHash } from 'sensible-sdk/dist/common/utils';
 import * as util from './util'
 import * as Sentry from "@sentry/react";
 import customSatotxList from './customSatotx.json'
@@ -591,37 +588,12 @@ export async function mergeBsvUtxo(network: NetWork, senderWif: string) {
     }
 }
 
-// 合并 sensible ft
-export async function mergeSensibleFt(network: NetWork) {}
-
-const hasProtoFlag = function (scriptBuffer: any) {
-    const flag = protoHeader.getFlag(scriptBuffer);
-    if (flag.compare(protoHeader.PROTO_FLAG) === 0) {
-      return true;
-    }
-    return false;
-};
-
 
 const parseTokenContractScript = function (scriptBuf: any, network: any = "mainnet") {
-    const hasSensibleFlag = hasProtoFlag(scriptBuf);
-    if (!hasSensibleFlag) {
-      return null;
-    }
-    const dataPart = tokenProto.parseDataPart(scriptBuf);
-    const tokenAddress = new bsv.Address(
-      Buffer.from(dataPart.tokenAddress!, "hex"),
-      network
-    ).toString();
-    // const genesis = getGenesis(dataPart.sensibleID!.txid, dataPart.sensibleID!.index);
-    const genesis = toHex(tokenProto.getTokenID(scriptBuf));
-    const codehash = getCodeHash(new bsv.Script(scriptBuf));
-    return {
-      ...dataPart,
-      genesis,
-      codehash,
-      tokenAddress,
-    };
+    
+    const parsed = SensibleFT.parseTokenScript(scriptBuf, network)
+    
+    return parsed
 };
 
 

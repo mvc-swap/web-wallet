@@ -41,7 +41,7 @@ export interface State {
 
 export interface TransferReceiver {
     address: string
-    amount: number
+    amount: string
 }
 
 export interface BsvUtxo{
