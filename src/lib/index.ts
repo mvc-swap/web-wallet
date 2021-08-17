@@ -203,12 +203,13 @@ export async function getAddressBsvBalance(network: NetWork, address: string): P
 
 export async function getAddressBsvBalanceByUtxo(network: NetWork, address: string): Promise<string> {
     let page = 1
+    const pageSize = 16
     let sum: string = '0'
     for (;;) {
-        const utxoList = await getAddressBsvUtxoList(network, address, page)
+        const utxoList = await getAddressBsvUtxoList(network, address, page, pageSize)
         const total = utxoList.reduce((prev: any, cur: any) => util.plus(prev, cur.satoshis), '0')
         sum = util.plus(sum, total)
-        if (utxoList.length === 0) {
+        if (utxoList.length < pageSize) {
             break
         }
         page++
