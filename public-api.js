@@ -112,7 +112,7 @@ function Bsv({
           }
           const data = eventData.data;
           if (data.requestId === requestId) {
-            data.error ? reject(error) : resolve(data.response);
+            data.error ? reject(data.error) : resolve(data.response);
           }
         });
         postMsg.emit(hashdata.id, {
@@ -139,9 +139,9 @@ function Bsv({
       }
     };
 
-    const rpcAfterPing = async (method) => {
+    const rpcAfterPing = async (method, params) => {
       await pingUntilResponse();
-      return rpc(method);
+      return rpc(method, params);
     };
 
     const getAccount = () => rpcAfterPing("getAccount");
@@ -149,11 +149,13 @@ function Bsv({
     const getSensibleFtBalance = () => rpcAfterPing("getSensibleFtBalance");
     const getAddress = () => rpcAfterPing("getAddress");
     const logout = () => rpcAfterPing("logout");
+    const signTx = (params) => rpcAfterPing("signTx", params);
     const destroy = function () {
       iframe.parentChild.removeChild(iframe);
     };
 
     return {
+      signTx,
       getAccount,
       getAddress,
       getBsvBalance,
@@ -207,6 +209,7 @@ function Bsv({
     transferBsv,
     transferSensibleFt,
     transferAll,
+    signTx: backIframe.signTx,
     getAccount: backIframe.getAccount,
     getAddress: backIframe.getAddress,
     getBsvBalance: backIframe.getBsvBalance,

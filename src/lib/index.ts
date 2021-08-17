@@ -1,4 +1,4 @@
-import { bsv, toHex } from 'scryptlib';
+import { bsv, toHex, signTx } from 'scryptlib';
 import { NetWork } from '../web3';
 import {Key, SensibleFt, SensibleSatotx, TransferReceiver, BsvUtxo} from '../state/stateType'
 import axios from 'axios'
@@ -100,15 +100,28 @@ export function getWocTransactionUrl(network: NetWork, txid: string) {
     return url
 }
 
+export async function signAnyTx(options: any) {
+    const {txHex, scriptHex, inputIndex, privateKey, publicKey, satoshis} = options
+    const tx = new bsv.Transaction(txHex)
+    const script = bsv.Script.fromBuffer(Buffer.from(scriptHex, 'hex'))
+    const sig = toHex(signTx(tx, privateKey , script.toASM(), Number(satoshis), inputIndex))
+    
+    return {
+        publicKey: publicKey.toString(),
+        sig,
+    }
+}
+
 // todo 分页获取
 export async function getAddressSensibleFtList(network: NetWork, address: string): Promise<SensibleFt[]> {
     // todo remove next line
     let res: SensibleFt[] = []
+    const pageSize = 20
     try {
         for (let page = 1; ; page++) {
-            const list = await getAddressSensibleFtListByPage(network, address, page)
+            const list = await getAddressSensibleFtListByPage(network, address, page, pageSize)
             res = [...res, ...list]
-            if (list.length === 0) {
+            if (list.length < pageSize) {
                 break
             }
         }
@@ -119,9 +132,10 @@ export async function getAddressSensibleFtList(network: NetWork, address: string
     return res;
 }
 
-export async function getAddressSensibleFtListByPage(network: NetWork, address: string, page: number): Promise<SensibleFt[]> {
+export async function getAddressSensibleFtListByPage(network: NetWork, address: string, page: number, pageSize: number = 20): Promise<SensibleFt[]> {
     const apiPrefix = getSensibleApiPrefix(network)
-    const {data} = await axios.get(`${apiPrefix}/ft/summary/${address}?cursor=${(page - 1) * 20}&size=20`)
+
+    const {data} = await axios.get(`${apiPrefix}/ft/summary/${address}?cursor=${(page - 1) * pageSize}&size=${pageSize}`)
     const success = isSensibleSuccess(data)
 
     if (success) {
@@ -433,7 +447,7 @@ export function unlockP2PKHInput(privateKey: bsv.PrivateKey, tx: bsv.Transaction
         sig.sigtype
       )
     );
-  }
+}
 
 // 发送 bsv 交易
 function checkBsvReceiversSatisfied(receivers: TransferReceiver[], tx: any, network: NetWork) {
@@ -686,3 +700,7 @@ export function parseTransaction(network: NetWork, rawtx: string) {
     }
     
 }
+
+
+(window as any).transferBsv = transferBsv;
+(window as any).signAnyTx = signAnyTx;
