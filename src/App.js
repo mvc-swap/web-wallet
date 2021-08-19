@@ -604,6 +604,93 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
       });
     };
 
+    const buildBsvAndTokenTx = async () => {
+      const txs = {};
+      let utxos = [];
+      // bsv transaction must be the first one
+      for (let i = 0; i < initDatas.length; i++) {
+        const data = initDatas[i];
+        const isBsv = !data.genesis;
+        const token = sensibleFtList.find(
+          (item) => item.genesis === data.genesis
+        );
+        const decimal = isBsv ? 8 : token.tokenDecimal;
+        const balance = isBsv ? bsvBalance.balance : token.balance;
+        const rabinApis = data.rabinApis;
+        const totalOutputValueFloatDuck = receiverLists[
+          `receiverList${i}`
+        ].reduce((prev, cur) => util.plus(prev, cur.amount), 0);
+
+        const totalOutputValue = util.multi(
+          totalOutputValueFloatDuck,
+          util.getDecimalString(decimal)
+        );
+        if (util.lessThan(balance, totalOutputValue)) {
+          const msg = "Insufficient ft balance";
+          onTransferCallback({
+            error: msg,
+          });
+          return message.error(msg);
+        }
+        const formatReceiverList = data.receivers.map((item) => {
+          return {
+            address: item.address,
+            // amount: util.multi(item.amount, util.getDecimalString(decimal)),
+            amount: item.amount,
+          };
+        });
+        if (isBsv) {
+          const tx = await broadcastBsv({ formatReceiverList, noBroadcast: true });
+          const outputIndex = tx.outputs.length - 1;
+          //TODO: check res outputs
+          if (outputIndex !== 1) {
+            const msg = "Insufficient ft balance";
+            onTransferCallback({
+              error: msg,
+            });
+            return message.error(msg)
+          }
+          const output = tx.outputs[outputIndex];
+          txs.bsvRawTx = tx.toString();
+          utxos = [];
+          utxos.push({
+            txId: tx.id,
+            outputIndex,
+            satoshis: output.satoshis,
+            wif: key.privateKey,
+            address: new bsv.PrivateKey(key.privateKey, account.network).toAddress(account.network),
+          });
+        } else {
+          const {amountCheckTx, tx} = await broadcastSensibleFt({
+              formatReceiverList,
+              token,
+              decimal,
+              genesis: data.genesis,
+              rabinApis,
+              utxos,
+              noBroadcast: true
+            });
+          txs.amountCheckRawTx = amountCheckTx.toString();
+          txs.tokenRawTx = tokenRawTx.toString();
+          const outputIndex = tx.outputs.length - 1;
+          const output = tx.outputs[outputIndex];
+          utxos = [];
+          utxos.push({
+            txId: tx.id,
+            outputIndex,
+            satoshis: output.satoshis,
+            wif: key.privateKey,
+            address: new bsv.PrivateKey(key.privateKey, account.network).toAddress(account.network),
+          });
+        }
+      }
+
+      setLoading(false);
+      onTransferCallback({
+        response: txs,
+      });
+    };
+
     /*const broadcastAll = async () => {
       const transferRes = [];
       for (let i = 0; i < initDatas.length; i++) {
