@@ -331,7 +331,7 @@ export async function transferSensibleFt(network: NetWork, signers: SensibleSato
         const errMsg = err.toString();
         const isBsvAmountExceed =
           errMsg.indexOf(
-            "The count of utxos should not be more than 3 in transfer"
+            "Bsv utxos should be no more than 3 in "
           ) > 0;
         let isFtUtxoAmountExceed = errMsg.indexOf('Too many token-utxos') > 0;
         console.log("broadcast sensible ft error");

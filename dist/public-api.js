@@ -440,11 +440,12 @@ function Bsv({
     const siteMeta = await getSiteMetadata();
     return openPopupAndRequest("requestAccount", siteMeta);
   };
-  const transferBsv = function ({ receivers }) {
+  const transferBsv = function ({ receivers, noBroadcast }) {
     // 交易成功 resolve  获取资产余额 是否变更
     // 交易失败 reject
     return openPopupAndRequest("transferBsv", {
       receivers,
+      noBroadcast: !!noBroadcast,
     });
   };
   const transferSensibleFt = function ({
@@ -452,6 +453,7 @@ function Bsv({
     codehash,
     genesis,
     rabinApis,
+    noBroadcast,
   }) {
     // 交易成功 resolve  获取资产余额 是否变更
     // 交易失败 reject
@@ -460,6 +462,7 @@ function Bsv({
       codehash,
       genesis,
       rabinApis,
+      noBroadcast: !!noBroadcast,
     });
   };
   const transferAll = function (datas) {

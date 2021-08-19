@@ -22,7 +22,7 @@ import {
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import * as QRCode from "qrcode.react";
-import { bsv } from 'scryptlib';
+import { bsv } from "scryptlib";
 import {
   getWocAddressUrl,
   formatValue,
@@ -41,7 +41,7 @@ import { useOnceCall } from "./hooks";
 import "./App.css";
 import * as util from "./lib/util";
 import * as Sentry from "@sentry/react";
-import axios from 'axios';
+import axios from "axios";
 
 //const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const { Option } = Select;
@@ -365,24 +365,24 @@ function getRabinPubKeys(url) {
 }
 
 async function getRabins(rabinApis = []) {
-  let promises = [], rabins = [];
-  rabinApis.forEach(rabinApi => {
+  let promises = [],
+    rabins = [];
+  rabinApis.forEach((rabinApi) => {
     promises.push(getRabinPubKeys(rabinApi));
-  })
-  return new Promise(resolve => {
-    axios.all(promises).then(res => {
+  });
+  return new Promise((resolve) => {
+    axios.all(promises).then((res) => {
       // console.log(res);
       res.forEach((item, index) => {
         rabins.push({
           satotxApiPrefix: rabinApis[index],
-          satotxPubKey: item.data.data.pubKey
-        })
-      })
+          satotxPubKey: item.data.data.pubKey,
+        });
+      });
 
       resolve(rabins);
-    })
-  })
-
+    });
+  });
 }
 
 function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
@@ -427,7 +427,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
       let txid = "";
       try {
         if (noBroadcast === true) {
-          const allUtxos = true
+          const allUtxos = true;
           const tx = await await transferBsv(
             account.network,
             key.privateKey,
@@ -435,12 +435,12 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
             noBroadcast,
             allUtxos
           );
-          return tx
+          return tx;
         }
         const res = await await transferBsv(
           account.network,
           key.privateKey,
-          formatReceiverList,
+          formatReceiverList
         );
         transferRes = res;
         txid = res.txid;
@@ -466,12 +466,11 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
       genesis,
       rabinApis,
       utxos,
-      noBroadcast
+      noBroadcast,
     }) => {
       setLoading(true);
       let transferRes;
       try {
-
         const rabins = await getRabins(rabinApis);
         const res = await transferSensibleFt(
           account.network,
@@ -537,7 +536,10 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
           };
         });
         if (isBsv) {
-          const tx = await broadcastBsv({ formatReceiverList, noBroadcast: true });
+          const tx = await broadcastBsv({
+            formatReceiverList,
+            noBroadcast: true,
+          });
           const outputIndex = tx.outputs.length - 1;
           //TODO: check res outputs
           if (outputIndex !== 1) {
@@ -545,30 +547,41 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
             onTransferCallback({
               error: msg,
             });
-            return message.error(msg)
+            return message.error(msg);
           }
           const output = tx.outputs[outputIndex];
-          txs.push([tx, true]);
+          txs.push({
+            tx: tx,
+            isBsv: true,
+            noBroadcast: !!data.noBroadcast,
+          });
           utxos = [];
           utxos.push({
             txId: tx.id,
             outputIndex,
             satoshis: output.satoshis,
             wif: key.privateKey,
-            address: new bsv.PrivateKey(key.privateKey, account.network).toAddress(account.network),
+            address: new bsv.PrivateKey(
+              key.privateKey,
+              account.network
+            ).toAddress(account.network),
           });
         } else {
-          const {routeCheckTx, tx} = await broadcastSensibleFt({
-              formatReceiverList,
-              token,
-              decimal,
-              genesis: data.genesis,
-              rabinApis,
-              utxos,
-              noBroadcast: true
-            });
-          txs.push([routeCheckTx, false]);
-          txs.push([tx, true]);
+          const { routeCheckTx, tx } = await broadcastSensibleFt({
+            formatReceiverList,
+            token,
+            decimal,
+            genesis: data.genesis,
+            rabinApis,
+            utxos,
+            noBroadcast: true,
+          });
+          txs.push({
+            tx,
+            routeCheckTx,
+            isBsv: false,
+            noBroadcast: !!data.noBroadcast,
+          });
           const outputIndex = tx.outputs.length - 1;
           const output = tx.outputs[outputIndex];
           utxos = [];
@@ -577,23 +590,48 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
             outputIndex,
             satoshis: output.satoshis,
             wif: key.privateKey,
-            address: new bsv.PrivateKey(key.privateKey, account.network).toAddress(account.network),
+            address: new bsv.PrivateKey(
+              key.privateKey,
+              account.network
+            ).toAddress(account.network),
           });
         }
       }
 
       for (const txInfo of txs) {
-        const tx = txInfo[0]
-        const txHex = tx.serialize(true)
-        const res = await broadcastSensibleQeury(account.network, txHex)
-        if (txInfo[1] === true) {
-          const txParseRes = parseTransaction(account.network, txHex)
-          transferRes.push({
-            txid: res,
-            outputs: txParseRes.outputs,
-            fee: tx.getFee(),
-          })
+        if (!txInfo.noBroadcast) {
+          if (txInfo.routeCheckTx) {
+            await broadcastSensibleQeury(
+              account.network,
+              txInfo.routeCheckTx.serialize(true)
+            );
+          }
+          if (txInfo.tx) {
+            await broadcastSensibleQeury(
+              account.network,
+              txInfo.tx.serialize(true)
+            );
+          }
         }
+
+        var resItem = {
+          txid: txInfo.tx.hash,
+          outputs: parseTransaction(account.network, txInfo.tx.serialize(true))
+            .outputs,
+          fee: txInfo.tx.getFee(),
+          isBsv: txInfo.isBsv,
+          txHex: txInfo.tx.serialize(true),
+        };
+        if (!resItem.isBsv) {
+          resItem.routeCheckTxid = txInfo.routeCheckTx.hash;
+          resItem.routeCheckTxHex = txInfo.routeCheckTx.serialize(true);
+          resItem.routeCheckOutputs = parseTransaction(
+            account.network,
+            txInfo.routeCheckTx.serialize(true)
+          ).outputs;
+        }
+
+        transferRes.push(resItem);
       }
 
       setLoading(false);
@@ -640,7 +678,10 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
           };
         });
         if (isBsv) {
-          const tx = await broadcastBsv({ formatReceiverList, noBroadcast: true });
+          const tx = await broadcastBsv({
+            formatReceiverList,
+            noBroadcast: true,
+          });
           const outputIndex = tx.outputs.length - 1;
           //TODO: check res outputs
           if (outputIndex !== 1) {
@@ -648,7 +689,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
             onTransferCallback({
               error: msg,
             });
-            return message.error(msg)
+            return message.error(msg);
           }
           const output = tx.outputs[outputIndex];
           txs.bsvRawTx = tx.toString();
@@ -658,20 +699,23 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
             outputIndex,
             satoshis: output.satoshis,
             wif: key.privateKey,
-            address: new bsv.PrivateKey(key.privateKey, account.network).toAddress(account.network),
+            address: new bsv.PrivateKey(
+              key.privateKey,
+              account.network
+            ).toAddress(account.network),
           });
         } else {
-          const {amountCheckTx, tx} = await broadcastSensibleFt({
-              formatReceiverList,
-              token,
-              decimal,
-              genesis: data.genesis,
-              rabinApis,
-              utxos,
-              noBroadcast: true
-            });
+          const { amountCheckTx, tx } = await broadcastSensibleFt({
+            formatReceiverList,
+            token,
+            decimal,
+            genesis: data.genesis,
+            rabinApis,
+            utxos,
+            noBroadcast: true,
+          });
           txs.amountCheckRawTx = amountCheckTx.toString();
-          txs.tokenRawTx = tokenRawTx.toString();
+          txs.tokenRawTx = tx.toString();
           const outputIndex = tx.outputs.length - 1;
           const output = tx.outputs[outputIndex];
           utxos = [];
@@ -680,7 +724,10 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
             outputIndex,
             satoshis: output.satoshis,
             wif: key.privateKey,
-            address: new bsv.PrivateKey(key.privateKey, account.network).toAddress(account.network),
+            address: new bsv.PrivateKey(
+              key.privateKey,
+              account.network
+            ).toAddress(account.network),
           });
         }
       }
@@ -690,62 +737,6 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
         response: txs,
       });
     };
-
-    /*const broadcastAll = async () => {
-      const transferRes = [];
-      for (let i = 0; i < initDatas.length; i++) {
-        const data = initDatas[i];
-        const isBsv = !data.genesis;
-        const token = sensibleFtList.find(
-          (item) => item.genesis === data.genesis
-        );
-        const decimal = isBsv ? 8 : token.tokenDecimal;
-        const balance = isBsv ? bsvBalance.balance : token.balance;
-        const rabinApis = data.rabinApis;
-        const totalOutputValueFloatDuck = receiverLists[
-          `receiverList${i}`
-        ].reduce((prev, cur) => util.plus(prev, cur.amount), 0);
-
-        const totalOutputValue = util.multi(
-          totalOutputValueFloatDuck,
-          util.getDecimalString(decimal)
-        );
-        if (util.lessThan(balance, totalOutputValue)) {
-          const msg = "Insufficient ft balance";
-          onTransferCallback({
-            error: msg,
-          });
-          return message.error(msg);
-        }
-        const formatReceiverList = data.receivers.map((item) => {
-          return {
-            address: item.address,
-            // amount: util.multi(item.amount, util.getDecimalString(decimal)),
-            amount: item.amount,
-          };
-        });
-        const res = isBsv
-          ? await broadcastBsv({ formatReceiverList })
-          : await broadcastSensibleFt({
-              formatReceiverList,
-              token,
-              decimal,
-              genesis: data.genesis,
-              rabinApis
-            });
-        transferRes.push(res);
-        if(i < initDatas.length - 1) {
-          await sleep(2000);
-        }
-      }
-
-      setLoading(false);
-      onTransferCallback({
-        response: {
-          ...transferRes,
-        },
-      });
-    };*/
 
     Modal.confirm({
       title: "Confirm the transaction",
@@ -901,6 +892,7 @@ function TransferPanel({
   rabinApis = [],
   onCancel,
   onTransferCallback,
+  noBroadcast,
 }) {
   const [key] = useGlobalState("key");
   const [bsvBalance] = useGlobalState("bsvBalance");
@@ -985,13 +977,25 @@ function TransferPanel({
       let txid = "";
       let transferRes;
       try {
-        const res = await await transferBsv(
+        const res = await transferBsv(
           account.network,
           key.privateKey,
-          formatReceiverList
+          formatReceiverList,
+          noBroadcast
         );
-        transferRes = res;
-        txid = res.txid;
+        if (noBroadcast) {
+          transferRes = {
+            txid: res.hash,
+            txHex: res.serialize(true),
+            outputs: parseTransaction(account.network, res.serialize(true))
+              .outputs,
+            fee: res.getFee(),
+          };
+          txid = res.hash;
+        } else {
+          transferRes = res;
+          txid = res.txid;
+        }
       } catch (err) {
         const msg = "broadcast error: " + err.toString();
         console.log(
@@ -1066,10 +1070,29 @@ function TransferPanel({
           key.privateKey,
           formatReceiverList,
           token.codehash,
-          token.genesis
+          token.genesis,
+          false,
+          noBroadcast
         );
-        transferRes = res;
-        txid = res.txid;
+        if (noBroadcast) {
+          transferRes = {
+            txid: res.tx.hash,
+            outputs: parseTransaction(account.network, res.tx.serialize(true))
+              .outputs,
+            fee: res.tx.getFee(),
+            routeCheckTxid: res.routeCheckTx.hash,
+            txHex: res.tx.serialize(true),
+            routeCheckTxHex: res.routeCheckTx.serialize(true),
+            routeCheckOutputs: parseTransaction(
+              account.network,
+              res.routeCheckTx.serialize(true)
+            ).outputs,
+          };
+          txid = res.tx.hash;
+        } else {
+          transferRes = res;
+          txid = res.txid;
+        }
       } catch (err) {
         console.log("broadcast sensible ft error ");
         console.error(err);
@@ -1275,6 +1298,7 @@ function App() {
   const [initReceivers, setInitReceivers] = useState([]);
   const [initDatas, setInitDatas] = useState([]);
   const [initRabins, setRabins] = useState([]);
+  const [initNoBroadcast, setInitNoBroadcast] = useState(false);
 
   const handleTransfer = (genesis) => {
     setTransfering(true);
@@ -1369,6 +1393,7 @@ function App() {
     }
     setTransfering(true);
     setInitReceivers(params.receivers);
+    setInitNoBroadcast(params.noBroadcast);
   }, !!transferBsvCondition);
   useOnceCall(() => {
     const data = getHashData();
@@ -1401,6 +1426,7 @@ function App() {
     setTrasferSensibleFtGenesis(params.genesis);
     setInitReceivers(params.receivers);
     setRabins(params.rabinApis);
+    setInitNoBroadcast(params.noBroadcast);
   }, !!transferBsvCondition);
   useOnceCall(() => {
     const data = getHashData();
@@ -1432,7 +1458,6 @@ function App() {
         return;
       }
       setTransfering(true);
-      // console.log(params.datas);
       setInitDatas(params.datas);
     });
   }, !!transferBsvCondition);
@@ -1456,6 +1481,7 @@ function App() {
             onCancel={handleCancelTransfer}
             onTransferCallback={handlePopResponseCallback}
             initReceivers={initReceivers}
+            noBroadcast={initNoBroadcast}
           />
         ) : (
           <TransferAllPanel
