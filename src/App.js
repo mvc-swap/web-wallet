@@ -22,7 +22,7 @@ import {
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import * as QRCode from "qrcode.react";
-import { bsv } from "scryptlib";
+import { mvc } from "mvc-scrypt";
 import {
   getWocAddressUrl,
   formatValue,
@@ -140,7 +140,7 @@ function LoginPanel() {
         <div>
           Web钱包的私钥是通过用户的邮箱和密码实时计算得到，不会上传服务器，也不会保存在本地(代码见
           <a
-            href="https://github.com/klouskingsley/bsv-web-wallet"
+            href="https://github.com/klouskingsley/mvc-web-wallet"
             target="_blank"
             rel="noreferrer"
           >
@@ -273,21 +273,21 @@ function AccountInfoPanel({ onWithDraw, onTransfer }) {
     <Card className="card" title="Asset" bordered={false}>
       <Form layout="vertical">
         {bsvBalance && (
-          <Form.Item label="BSV balance">
+          <Form.Item label="MVC balance">
             <Row justify="space-between">
               <Col span={16}>
                 <div>{formatValue(bsvBalance.balance, 8)}</div>
               </Col>
               <Col span={7}>
                 <Button type="link" onClick={() => handleTransfer("")}>
-                  Transfer BSV
+                  Transfer MVC
                 </Button>
               </Col>
             </Row>
           </Form.Item>
         )}
         {sensibleFtList.length > 0 && (
-          <Form.Item label="Sensible Fungible Token">
+          <Form.Item label="Fungible Token">
             <List
               itemLayout="horizontal"
               dataSource={sensibleFtList}
@@ -451,7 +451,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
         onTransferCallback({
           error: msg,
         });
-        console.log("broadcast bsv error ");
+        console.log("broadcast mvc error ");
         console.error(err);
         message.error(err.toString());
       }
@@ -503,7 +503,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
       const txs = [];
       const transferRes = [];
       let utxos = [];
-      // bsv transaction must be the first one
+      // mvc transaction must be the first one
       for (let i = 0; i < initDatas.length; i++) {
         const data = initDatas[i];
         const isBsv = !data.genesis;
@@ -561,7 +561,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
             outputIndex,
             satoshis: output.satoshis,
             wif: key.privateKey,
-            address: new bsv.PrivateKey(
+            address: new mvc.PrivateKey(
               key.privateKey,
               account.network
             ).toAddress(account.network),
@@ -590,7 +590,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
             outputIndex,
             satoshis: output.satoshis,
             wif: key.privateKey,
-            address: new bsv.PrivateKey(
+            address: new mvc.PrivateKey(
               key.privateKey,
               account.network
             ).toAddress(account.network),
@@ -645,7 +645,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
     const buildBsvAndTokenTx = async () => {
       const txs = {};
       let utxos = [];
-      // bsv transaction must be the first one
+      // mvc transaction must be the first one
       for (let i = 0; i < initDatas.length; i++) {
         const data = initDatas[i];
         const isBsv = !data.genesis;
@@ -699,7 +699,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
             outputIndex,
             satoshis: output.satoshis,
             wif: key.privateKey,
-            address: new bsv.PrivateKey(
+            address: new mvc.PrivateKey(
               key.privateKey,
               account.network
             ).toAddress(account.network),
@@ -724,7 +724,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
             outputIndex,
             satoshis: output.satoshis,
             wif: key.privateKey,
-            address: new bsv.PrivateKey(
+            address: new mvc.PrivateKey(
               key.privateKey,
               account.network
             ).toAddress(account.network),
@@ -771,7 +771,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
           if (!isBsv && !token) {
             return null;
           }
-          const tokenSymbol = isBsv ? "BSV" : token.tokenSymbol;
+          const tokenSymbol = isBsv ? "MVC" : token.tokenSymbol;
           const decimal = isBsv ? 8 : token.tokenDecimal;
           const balance = isBsv ? bsvBalance.balance : token.balance;
           const formatBalance = formatValue(balance, decimal);
@@ -942,7 +942,7 @@ function TransferPanel({
   if (!isBsv && !token) {
     return null;
   }
-  const tokenSymbol = isBsv ? "BSV" : token.tokenSymbol;
+  const tokenSymbol = isBsv ? "MVC" : token.tokenSymbol;
   const decimal = isBsv ? 8 : token.tokenDecimal;
   const balance = isBsv ? bsvBalance.balance : token.balance;
   const formatBalance = formatValue(balance, decimal);
@@ -1014,7 +1014,7 @@ function TransferPanel({
         onTransferCallback({
           error: msg,
         });
-        console.log("broadcast bsv error ");
+        console.log("broadcast mvc error ");
         console.error(err);
         message.error(err.toString());
       }
@@ -1373,7 +1373,7 @@ function App() {
   }, !!requestAccountCondition);
   useOnceCall(() => {
     const data = getHashData();
-    console.log("bsv hash data", data);
+    console.log("mvc hash data", data);
     if (!data || data.data.type !== "request") {
       return;
     }
@@ -1388,7 +1388,7 @@ function App() {
       0
     );
     if (util.greaterThan(outputTotal, bsvBalance.balance)) {
-      handlePopResponseCallback({ error: "insufficient bsv balance" });
+      handlePopResponseCallback({ error: "insufficient mvc balance" });
       return;
     }
     setTransfering(true);
@@ -1430,7 +1430,7 @@ function App() {
   }, !!transferBsvCondition);
   useOnceCall(() => {
     const data = getHashData();
-    console.log("bsv hash data", data);
+    console.log("mvc hash data", data);
     if (!data || data.data.type !== "request") {
       return;
     }
@@ -1450,7 +1450,7 @@ function App() {
         0
       );
       if (isBsv && util.greaterThan(outputTotal, bsvBalance.balance)) {
-        handlePopResponseCallback({ error: "insufficient bsv balance" });
+        handlePopResponseCallback({ error: "insufficient mvc balance" });
         return;
       }
       if (ft && util.greaterThan(outputTotal, ft.balance)) {

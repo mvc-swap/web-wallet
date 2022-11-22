@@ -6,29 +6,29 @@ import reportWebVitals from "./reportWebVitals";
 import * as actions from "./state/action";
 import * as Sentry from "@sentry/react";
 import { Integrations } from "@sentry/tracing";
-import { SensibleApi } from "sensible-sdk";
-import { bsv } from "scryptlib";
+import { SensibleApi } from "meta-contract";
+import { mvc } from "mvc-scrypt";
 
 (function () {
-  const originBroadcast = SensibleApi.prototype.broadcast;
+  /*const originBroadcast = SensibleApi.prototype.broadcast;
   SensibleApi.prototype.broadcast = async function (hex) {
-    const txid = new bsv.Transaction(hex).hash;
+    const txid = new mvc.Transaction(hex).hash;
     const txMsg = `txid: ${txid}; rawtx: ${hex}`;
-    console.log("sensible-sdk 广播", txMsg);
+    console.log("meta-contract 广播", txMsg);
     try {
       const res = await originBroadcast.call(this, hex);
       return res;
     } catch (err) {
-      console.log("sensible-sdk 广播错误", txMsg);
+      console.log("meta-contract 广播错误", txMsg);
       const newError = new Error(
-        `${err.message} sensible-sdk 广播错误 ${txMsg}`
+        `${err.message} meta-contract 广播错误 ${txMsg}`
       );
       setTimeout(() => {
         throw newError;
       }, 0);
       throw err;
     }
-  };
+  };*/
 })();
 
 const isIframe = window === window.top;

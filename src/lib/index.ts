@@ -1,18 +1,18 @@
-import { bsv, toHex, signTx } from 'scryptlib';
+import { mvc, toHex, signTx } from 'mvc-scrypt';
 import { NetWork } from '../web3';
 import {Key, SensibleFt, SensibleSatotx, TransferReceiver, BsvUtxo} from '../state/stateType'
 import axios from 'axios'
-import {SensibleFT} from 'sensible-sdk'
+import {SensibleFT} from 'meta-contract'
 import * as util from './util'
 import * as Sentry from "@sentry/react";
 import customSatotxList from './customSatotx.json'
 
 function getSensibleApiPrefix(network: NetWork) {
-    const test = network === NetWork.Mainnet ? '' : '/test'
-    return `https://api.sensiblequery.com${test}`
+    const test = network === NetWork.Mainnet ? '' : '-testnet'
+    return `https://api-mvc${test}.metasv.com`
 }
 function isSensibleSuccess(res: any) {
-    return res.code === 0 && res.msg === 'ok'
+    return res.status === 200
 }
 
 function sleep(ms: number) {
@@ -20,7 +20,7 @@ function sleep(ms: number) {
 }
 
 export function formatValue(value: number, decimal: number) {
-    // const bigNum = bsv.crypto.BN.fromNumber(value)
+    // const bigNum = mvc.crypto.BN.fromNumber(value)
     // return bigNum.div(10**decimal).toString(10)
     // return value / (10**decimal)
     return util.div(value, util.getDecimalString(decimal))
@@ -28,7 +28,7 @@ export function formatValue(value: number, decimal: number) {
 
 export function isValidAddress(network: NetWork, address: string) {
     try {
-        new bsv.Address(address, network)
+        new mvc.Address(address, network)
         return true
     } catch (_) {
         return false
@@ -46,14 +46,14 @@ export function generateKeysFromEmailPassword(email: string, pass: string, netwo
     s += (s+''+s);
 
     let bufferS = Buffer.from(s)
-    bufferS = bsv.crypto.Hash.sha256(bufferS)
+    bufferS = mvc.crypto.Hash.sha256(bufferS)
 	for(let i=0;i<=49;i++){
         const tmp = Buffer.from(bufferS.toString('hex'))
-        bufferS = bsv.crypto.Hash.sha256(tmp)
+        bufferS = mvc.crypto.Hash.sha256(tmp)
 	}
-    const hex = bsv.crypto.Hash.sha256(Buffer.from(bufferS.toString('hex'))).toString('hex')
+    const hex = mvc.crypto.Hash.sha256(Buffer.from(bufferS.toString('hex'))).toString('hex')
     
-    const privateKey = new bsv.PrivateKey(hex, network)
+    const privateKey = new mvc.PrivateKey(hex, network)
     const address = privateKey.toAddress(network).toString()
     
     return {
@@ -73,10 +73,10 @@ export function getSensibleFtHistoryUrl(network: NetWork, address: string, genes
 export function getWocAddressUrl(network: NetWork, address: string) {
     let url = ''
     if (network === NetWork.Mainnet) {
-        url = 'https://whatsonchain.com/address/'
+        url = 'https://scan.mvc.space/address/'
     } 
     if (network === NetWork.Testnet) {
-        url = 'https://test.whatsonchain.com/address/'
+        url = 'https://scan.mvc.space/address/'
     }
     if (!url) {
         return url
@@ -88,10 +88,10 @@ export function getWocAddressUrl(network: NetWork, address: string) {
 export function getWocTransactionUrl(network: NetWork, txid: string) {
     let url = ''
     if (network === NetWork.Mainnet) {
-        url = 'https://whatsonchain.com/tx/'
+        url = 'https://scan.mvc.space/tx/'
     } 
     if (network === NetWork.Testnet) {
-        url = 'https://test.whatsonchain.com/tx/'
+        url = 'https://scan.mvc.space/tx/'
     }
     if (!url) {
         return url
@@ -102,8 +102,8 @@ export function getWocTransactionUrl(network: NetWork, txid: string) {
 
 export async function signAnyTx(options: any) {
     const {txHex, scriptHex, inputIndex, privateKey, publicKey, satoshis} = options
-    const tx = new bsv.Transaction(txHex)
-    const script = bsv.Script.fromBuffer(Buffer.from(scriptHex, 'hex'))
+    const tx = new mvc.Transaction(txHex)
+    const script = mvc.Script.fromBuffer(Buffer.from(scriptHex, 'hex'))
     const sig = toHex(signTx(tx, privateKey , script.toASM(), Number(satoshis), inputIndex))
     
     return {
@@ -135,36 +135,36 @@ export async function getAddressSensibleFtList(network: NetWork, address: string
 export async function getAddressSensibleFtListByPage(network: NetWork, address: string, page: number, pageSize: number = 20): Promise<SensibleFt[]> {
     const apiPrefix = getSensibleApiPrefix(network)
 
-    const {data} = await axios.get(`${apiPrefix}/ft/summary/${address}?cursor=${(page - 1) * pageSize}&size=${pageSize}`)
-    const success = isSensibleSuccess(data)
+    const res = await axios.get(`${apiPrefix}/contract/ft/address/${address}/balance`)
+    const success = isSensibleSuccess(res)
 
     if (success) {
-        return (data.data || []).map((item: any) => {
+        return (res.data || []).map((item: any) => {
             return {
                 genesis: item.genesis,
-                codehash: item.codehash,
+                codehash: item.codeHash,
                 tokenName: item.name,
                 tokenSymbol: item.symbol,
                 tokenDecimal: item.decimal,
-                balance: util.plus(item.balance, item.pendingBalance),
+                balance: util.plus(item.confirmedString, item.unconfirmedString),
             }
         })
     }
-    throw new Error(data.msg)
+    throw new Error(res.statusText)
 }
 
-// 获取 bsv utxo
+// 获取 mvc utxo
 export async function getAddressBsvUtxoList(network: NetWork, address: string, page: number, pageSize: number=16): Promise<BsvUtxo[]> {
     const cursor = (page - 1) * pageSize
     const apiPrefix = getSensibleApiPrefix(network)
-    const {data} = await axios.get(`${apiPrefix}/address/${address}/utxo?cursor=${cursor}&size=${pageSize}`)
-    const success = isSensibleSuccess(data)
+    const res = await axios.get(`${apiPrefix}/address/${address}/utxo`)
+    const success = isSensibleSuccess(res)
     if (success) {
-        return (data.data || []).map((item: any) => {
+        return (res.data || []).map((item: any) => {
             return {
                 txId: item.txid, 
-                outputIndex: item.vout,
-                satoshis: item.satoshi,
+                outputIndex: item.outIndex,
+                satoshis: item.value,
                 address: address,
             }
         })
@@ -201,18 +201,18 @@ export async function getAddressBsvUtxoList(network: NetWork, address: string, p
     // }
     // return []
     
-    throw new Error(data.msg)
+    throw new Error(res.statusText)
 }
 
 // 获取bsv 余额, 这里加入了ft utxo的值，暂时不能用
 export async function getAddressBsvBalance(network: NetWork, address: string): Promise<number | string> {
     const apiPrefix = getSensibleApiPrefix(network)
-    const {data} = await axios.get(`${apiPrefix}/address/${address}/balance`)
-    const success = isSensibleSuccess(data)
+    const res = await axios.get(`${apiPrefix}/address/${address}/balance`)
+    const success = isSensibleSuccess(res)
     if (success) {
-        return util.plus(data.data.satoshi, data.data.pendingSatoshi)
+        return util.plus(res.data.confirmed, res.data.unconfirmed)
     }
-    throw new Error(data.msg)
+    throw new Error(res.statusText)
 }
 
 export async function getAddressBsvBalanceByUtxo(network: NetWork, address: string): Promise<string> {
@@ -235,12 +235,12 @@ export async function getAddressBsvBalanceByUtxo(network: NetWork, address: stri
 // 获取 sensible ft 余额
 export async function getAddressSensibleFtBalance(network: NetWork, address: string, codehash: string, genesis: string): Promise<number> {
     const apiPrefix = getSensibleApiPrefix(network)
-    const {data} = await axios.get(`${apiPrefix}/ft/balance/${codehash}/${genesis}/${address}`)
-    const success = isSensibleSuccess(data)
+    const res = await axios.get(`${apiPrefix}/contract/ft/address/${address}/balance?codeHash=${codehash}&&genesis=${genesis}`)
+    const success = isSensibleSuccess(res)
     if (success) {
-        return data.data.satoshi
+        return Number(util.plus(res.data[0].confirmedString, res.data[0].unconfirmedString))
     }
-    throw new Error(data.msg)
+    throw new Error(res.statusText)
 }
 
 // 获取 sensible 余额 地址
@@ -255,14 +255,14 @@ export async function getSensibleAddressUrl(network: NetWork, address: string, c
 export async function broadcastSensibleQeury(network: NetWork, rawtx: string) {
     const apiPrefx = getSensibleApiPrefix(network)
     console.log('sensible 交易广播', network, rawtx)
-    const {data} = await axios.post(`${apiPrefx}/pushtx`, {
-        txHex: rawtx,
+    const res = await axios.post(`${apiPrefx}/tx/broadcast`, {
+        hex: rawtx,
     })
-    const success = isSensibleSuccess(data)
+    const success = isSensibleSuccess(res)
     if (success) {
-        return new bsv.Transaction(rawtx).hash
+        return new mvc.Transaction(rawtx).hash
     }
-    throw new Error(data.msg)
+    throw new Error('broadcast failed')
 }
 
 
@@ -270,7 +270,7 @@ export async function broadcastSensibleQeury(network: NetWork, rawtx: string) {
 const mapBsvFeeError = (err: Error) => {
     if (err.message === "Insufficient balance.") {
         // 将模糊的错误信息转换
-        return new Error('Low bsv balance to pay miners')
+        return new Error('Low mvc balance to pay miners')
     }
     return err
 }
@@ -296,15 +296,10 @@ export async function transferSensibleFt(network: NetWork, signers: SensibleSato
 
     console.log('signers', signers)
     
-    const selectRes = signers && signers.length > 0 ? await SensibleFT.selectSigners(signers) : await SensibleFT.selectSigners();
-    // const selectRes = await SensibleFT.selectSigners();
-
     const ft = new SensibleFT({
         network: network as any,
         purse: senderWif,
-        feeb: 0.5,
-        signerSelecteds: selectRes.signerSelecteds,
-        signers: selectRes.signers,
+        feeb: 1.0,
     })
     console.log('transferSensibleFt', receivers, network, codehash, genesis, signers)
 
@@ -326,12 +321,12 @@ export async function transferSensibleFt(network: NetWork, signers: SensibleSato
             txid,
             outputs: txParseRes.outputs,
         }
-    } catch (_err) {
+    } catch (_err: any) {
         const err = mapBsvFeeError(_err)
         const errMsg = err.toString();
         const isBsvAmountExceed =
           errMsg.indexOf(
-            "Bsv utxos should be no more than 3 in "
+            "Mvc utxos should be no more than 3 in "
           ) > 0;
         let isFtUtxoAmountExceed = errMsg.indexOf('Too many token-utxos') > 0;
         console.log("broadcast sensible ft error");
@@ -341,13 +336,13 @@ export async function transferSensibleFt(network: NetWork, signers: SensibleSato
             throw err;
         }
 
-        // 如果 bsv utxo 先 merge bsv utxo
+        // 如果 mvc utxo 先 merge mvc utxo
         if (isBsvAmountExceed) {
             try {
                 await mergeBsvUtxo(network, senderWif)
                 await sleep(3000)
             } catch (err) {
-                console.log('merge bsv utxo fail')
+                console.log('merge mvc utxo fail')
                 console.error(err)
                 throw err
             }
@@ -366,9 +361,9 @@ export async function transferSensibleFt(network: NetWork, signers: SensibleSato
                     txid,
                     outputs: txParseRes.outputs,
                 }
-            } catch (_err) {
+            } catch (_err: any) {
                 const err = mapBsvFeeError(_err)
-                console.log('ft transfer fail after bsv utxo merge')
+                console.log('ft transfer fail after mvc utxo merge')
                 console.error(err)
                 const errMsg = err.toString()
                 isFtUtxoAmountExceed = errMsg.indexOf('Too many token-utxos') > 0;
@@ -381,12 +376,8 @@ export async function transferSensibleFt(network: NetWork, signers: SensibleSato
         if (isFtUtxoAmountExceed) {
             // merge utxo
             try {
-                const {tx} = await ft.merge({
-                    ownerWif: senderWif,
-                    codehash,
-                    genesis,
-                })
-                util.checkFeeRate(tx)
+                await ft.merge()
+                //util.checkFeeRate(tx)
                 await sleep(3000)
             } catch (err) {
                 console.log('merge ft utxo fail')
@@ -408,7 +399,7 @@ export async function transferSensibleFt(network: NetWork, signers: SensibleSato
                     txid,
                     outputs: txParseRes.outputs,
                 }
-            } catch (_err) {
+            } catch (_err: any) {
                 const err = mapBsvFeeError(_err)
                 console.log('ft transfer fail after ft utxo merge')
                 console.error(err)
@@ -418,18 +409,18 @@ export async function transferSensibleFt(network: NetWork, signers: SensibleSato
     } 
 }
 
-const Signature = bsv.crypto.Signature;
+const Signature = mvc.crypto.Signature;
 export const sighashType = Signature.SIGHASH_ALL | Signature.SIGHASH_FORKID;
 
 
 // p2pkh 解锁
-export function unlockP2PKHInput(privateKey: bsv.PrivateKey, tx: bsv.Transaction, inputIndex: number, sigtype: number) {
-    const sig = new bsv.Transaction.Signature({
+export function unlockP2PKHInput(privateKey: mvc.PrivateKey, tx: mvc.Transaction, inputIndex: number, sigtype: number) {
+    const sig = new mvc.Transaction.Signature({
       publicKey: privateKey.publicKey,
       prevTxId: tx.inputs[inputIndex].prevTxId,
       outputIndex: tx.inputs[inputIndex].outputIndex,
       inputIndex,
-      signature: bsv.Transaction.Sighash.sign(
+      signature: mvc.Transaction.Sighash.sign(
         tx,
         privateKey,
         sigtype,
@@ -441,7 +432,7 @@ export function unlockP2PKHInput(privateKey: bsv.PrivateKey, tx: bsv.Transaction
     });
   
     tx.inputs[inputIndex].setScript(
-      bsv.Script.buildPublicKeyHashIn(
+      mvc.Script.buildPublicKeyHashIn(
         sig.publicKey,
         sig.signature.toDER(),
         sig.sigtype
@@ -449,7 +440,7 @@ export function unlockP2PKHInput(privateKey: bsv.PrivateKey, tx: bsv.Transaction
     );
 }
 
-// 发送 bsv 交易
+// 发送 mvc 交易
 function checkBsvReceiversSatisfied(receivers: TransferReceiver[], tx: any, network: NetWork) {
     let satified = true
     const txAddressAmountMap: {[key: string]: number} = {}
@@ -479,7 +470,7 @@ export async function transferBsv(network: NetWork, senderWif: string, receivers
     // 3. 构造交易
     // 4. 广播交易
     console.log('arguments', network, senderWif, receivers)
-    const address = new bsv.PrivateKey(senderWif, network).toAddress(network)
+    const address = new mvc.PrivateKey(senderWif, network).toAddress(network)
     const balance = await getAddressBsvBalanceByUtxo(network, address)
     const totalOutput = receivers.reduce((prev: any, cur) => util.plus(prev, cur.amount), '0')
     if (util.lessThan(balance, totalOutput)) {
@@ -488,7 +479,7 @@ export async function transferBsv(network: NetWork, senderWif: string, receivers
     let utxoValue: string = '0'
     let selectedUtxoList = []
 
-    const tx = new bsv.Transaction()
+    const tx = new mvc.Transaction()
     tx.feePerKb(500)
     const dust = 456
 
@@ -503,14 +494,14 @@ export async function transferBsv(network: NetWork, senderWif: string, receivers
             utxoValue = util.plus(utxoValue, item.satoshis)
             selectedUtxoList.push(item)
             tx.addInput(
-                new bsv.Transaction.Input.PublicKeyHash({
-                    output: new bsv.Transaction.Output({
-                        script: bsv.Script.buildPublicKeyHashOut(item.address),
+                new mvc.Transaction.Input.PublicKeyHash({
+                    output: new mvc.Transaction.Output({
+                        script: mvc.Script.buildPublicKeyHashOut(item.address),
                         satoshis: item.satoshis,
                     }),
                     prevTxId: item.txId,
                     outputIndex: item.outputIndex,
-                    script: bsv.Script.empty(),
+                    script: mvc.Script.empty(),
                 })
             );
             if (!allUtxos && util.lessThanEqual(util.plus(totalOutput, dust), utxoValue)) {
@@ -545,7 +536,7 @@ export async function transferBsv(network: NetWork, senderWif: string, receivers
         })
     }
     tx.inputs.forEach((_: any, inputIndex: number) => {
-        const privateKey = new bsv.PrivateKey(senderWif)
+        const privateKey = new mvc.PrivateKey(senderWif)
         unlockP2PKHInput(privateKey, tx, inputIndex, sighashType);
     });
     util.checkFeeRate(tx)
@@ -572,26 +563,26 @@ export async function transferBsv(network: NetWork, senderWif: string, receivers
     }
 }
 
-// 合并 bsv utxo, 合并一页
+// 合并 mvc utxo, 合并一页
 export async function mergeBsvUtxo(network: NetWork, senderWif: string) {
-    const address = new bsv.PrivateKey(senderWif, network).toAddress(network)
+    const address = new mvc.PrivateKey(senderWif, network).toAddress(network)
     const utxolist = await getAddressBsvUtxoList(network, address, 1)
-    const tx = new bsv.Transaction()
+    const tx = new mvc.Transaction()
     tx.feePerKb(500)
     utxolist.forEach(item => {
-        tx.addInput(new bsv.Transaction.Input.PublicKeyHash({
-            output: new bsv.Transaction.Output({
-                script: bsv.Script.buildPublicKeyHashOut(item.address),
+        tx.addInput(new mvc.Transaction.Input.PublicKeyHash({
+            output: new mvc.Transaction.Output({
+                script: mvc.Script.buildPublicKeyHashOut(item.address),
                 satoshis: item.satoshis,
             }),
             prevTxId: item.txId,
             outputIndex: item.outputIndex,
-            script: bsv.Script.empty(),
+            script: mvc.Script.empty(),
         }))
     })
     tx.change(address)
     tx.inputs.forEach((_: any, inputIndex: number) => {
-        const privateKey = new bsv.PrivateKey(senderWif)
+        const privateKey = new mvc.PrivateKey(senderWif)
         unlockP2PKHInput(privateKey, tx, inputIndex, sighashType)
     })
     util.checkFeeRate(tx)
@@ -606,9 +597,9 @@ export async function mergeBsvUtxo(network: NetWork, senderWif: string) {
 
 const parseTokenContractScript = function (scriptBuf: any, network: any = "mainnet") {
     
-    const parsed = SensibleFT.parseTokenScript(scriptBuf, network)
+    //TODO: const parsed = SensibleFT.parseTokenScript(scriptBuf, network)
     
-    return parsed
+    return 
 };
 
 
@@ -616,8 +607,8 @@ const parseTokenContractScript = function (scriptBuf: any, network: any = "mainn
 export function parseTransaction(network: NetWork, rawtx: string) {
     let tx
     try {
-        tx = new bsv.Transaction(rawtx)
-    } catch (err) {
+        tx = new mvc.Transaction(rawtx)
+    } catch (err: any) {
         return {
             error: err.message
         }

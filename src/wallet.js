@@ -1,6 +1,6 @@
 
 import * as QRCode from 'qrcode.react';
-import { bsv } from 'scryptlib';
+import { mvc } from 'mvc-scrypt';
 import React, { useState, useEffect } from 'react';
 import { web3, LocalWallet, NetWork, SignType } from './web3';
 import { useInterval } from './hooks';
@@ -50,7 +50,7 @@ const Wallet = props => {
     const onClick = (e) => {
 
         try {
-            const privateKey = new bsv.PrivateKey.fromRandom('mainnet')
+            const privateKey = new mvc.PrivateKey.fromRandom('mainnet')
 
             setAddress(privateKey.toAddress() + '')
             web3.setWallet(new LocalWallet(NetWork.Mainnet, privateKey.toWIF()));
@@ -73,7 +73,7 @@ const Wallet = props => {
 
             let withdrawAddress = document.getElementById('withdrawAddress').value;
 
-            let address = new bsv.Address.fromString(withdrawAddress);
+            let address = new mvc.Address.fromString(withdrawAddress);
 
             if(address && address.type === 'pubkeyhash' && address.network.name === 'livenet') {
                 console.log('adddress', address )
@@ -108,7 +108,7 @@ const Wallet = props => {
 
                 tx.outputs.push(
                     {
-                        script: bsv.Script.buildPublicKeyHashOut(changeAddress).toHex(),
+                        script: mvc.Script.buildPublicKeyHashOut(changeAddress).toHex(),
                         satoshis: changeAmount
                     }
                 );

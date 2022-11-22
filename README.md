@@ -1,30 +1,30 @@
-# bsv web wallet
+# mvc web wallet
 
 ## install
 
 ```
-npm i -S git+https://github.com/klouskingsley/bsv-web-wallet.git
+npm i -S git+https://github.com/klouskingsley/mvc-web-wallet.git
 ```
 
 ## Usage
 
 ```js
-import webWallet from "bsv-web-wallet";
-const { Bsv } = webWallet;
+import webWallet from "mvc-web-wallet";
+const { Mvc } = webWallet;
 
-const bsv = new Bsv();
+const mvc = new Mvc();
 // 连接到钱包
-await bsv.requestAccount().then();
+await mvc.requestAccount().then();
 // 获取钱包账户信息
-const accountInfo = await bsv.getAccount();
+const accountInfo = await mvc.getAccount();
 // 获取bsv 余额
-const bsvBalance = await bsv.getBsvBalance();
+const bsvBalance = await mvc.getBsvBalance();
 // 发送bsv
-const transferBsvRes = await bsv.transferBsv({
+const transferBsvRes = await mvc.transferBsv({
   receivers: [{ address: "xxx", amount: 333 }],
 });
 // 发送 sensible ft
-const transferFtTres = await bsv.transferSensibleFt({
+const transferFtTres = await mvc.transferSensibleFt({
   receivers: [{ address: "xxx", amount: 344 }],
   codehash: "codehash",
   genesis: "genesis",
@@ -32,7 +32,7 @@ const transferFtTres = await bsv.transferSensibleFt({
     "https://s1.satoplay.com"
 ]
 });
-const transferAll = await bsv.transferAll([{
+const transferAll = await mvc.transferAll([{
     receivers: [{ address: "xxx", amount: 344 }],
   codehash: "codehash",
   genesis: "genesis",
@@ -44,27 +44,27 @@ const transferAll = await bsv.transferAll([{
 
 ## api
 
-### bsv.requestAccount(): Promise<void>
+### mvc.requestAccount(): Promise<void>
 
 连接到钱包
 
-### bsv.exitAccount(): Promise<void>
+### mvc.exitAccount(): Promise<void>
 
 退出登录
 
-### bsv.getAccount(): Promise<{name: string, network: 'mainnet' | 'testnet'}>
+### mvc.getAccount(): Promise<{name: string, network: 'mainnet' | 'testnet'}>
 
 获取钱包账户信息
 
-### bsv.getAddress(): Promise<string>
+### mvc.getAddress(): Promise<string>
 
 获取钱包地址
 
-### bsv.getBsvBalance(): Promise<{balance: number}>
+### mvc.getBsvBalance(): Promise<{balance: number}>
 
-获取钱包 bsv 余额，balance 单位为 satoshi
+获取钱包 mvc 余额，balance 单位为 satoshi
 
-### bsv.getSensibleFtBalance(): Promise<Array<SensibleFt>>
+### mvc.getSensibleFtBalance(): Promise<Array<SensibleFt>>
 
 获取钱包 sensible ft 余额
 
@@ -79,9 +79,9 @@ interface SensibleFt {
 }
 ```
 
-### bsv.transferBsv({receivers: Array<Receiver>}): Promise<{txid: string}>
+### mvc.transferBsv({receivers: Array<Receiver>}): Promise<{txid: string}>
 
-bsv 转账
+mvc 转账
 
 ```ts
 interface Receiver {
@@ -90,7 +90,7 @@ interface Receiver {
 }
 ```
 
-### bsv.transferSensibleFt({receivers: Array<Receiver>, codehash: string, genesis: string, rabinApis: Array<String>}): Promise<{txid: string}>
+### mvc.transferSensibleFt({receivers: Array<Receiver>, codehash: string, genesis: string, rabinApis: Array<String>}): Promise<{txid: string}>
 
 sensible ft 转账
 
@@ -102,9 +102,9 @@ interface Receiver {
 ```
 
 
-### bsv.transferAll([{receivers: Array<Receiver>, codehash: string, genesis: string, rabinApis: Array<String>}): Promise<{txid: string}]>
+### mvc.transferAll([{receivers: Array<Receiver>, codehash: string, genesis: string, rabinApis: Array<String>}): Promise<{txid: string}]>
 
-bsv 和 sensible ft 混合转账
+mvc 和 sensible ft 混合转账
 
 ```ts
 interface Receiver {

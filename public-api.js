@@ -29,8 +29,8 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
      */
 
-function Bsv({
-  pageUrl = "https://klouskingsley.github.io/bsv-web-wallet",
+function Mvc({
+  pageUrl = "https://klouskingsley.github.io/mvc-web-wallet",
   debug = false,
 } = {}) {
   const uuid = function () {
@@ -222,6 +222,6 @@ function Bsv({
 }
 
 export default {
-  // bsv: Bsv(),
-  Bsv,
+  // mvc: Mvc(),
+  Mvc,
 };

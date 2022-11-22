@@ -2,8 +2,8 @@ import {setGlobalState, getGlobalState } from './state'
 import {generateKeysFromEmailPassword, getAddressSensibleFtList, getAddressBsvBalanceByUtxo, signAnyTx} from '../lib'
 import {Account, BalanceBsv, Key, SensibleFt} from './stateType'
 import * as createPostMsg from 'post-msg';
-import { SensibleFT } from 'sensible-sdk';
-import { signTx, bsv, toHex } from 'scryptlib';
+import { SensibleFT } from 'meta-contract';
+import { signTx, mvc, toHex } from 'mvc-scrypt';
 
 // local account storage
 const accountStorageKey = 'accountStorageKey'
@@ -22,7 +22,8 @@ function getAccountStorage(): Account | null {
 }
 
 function isSupportToken(codehash: string) {
-    return SensibleFT.isSupportedToken(codehash)
+    //return SensibleFT.isSupportedToken(codehash)
+    return true
 }
 
 // app action
@@ -193,7 +194,7 @@ export async function runIframeTask() {
                             response: res,
                         }
                     })
-                } catch (err) {
+                } catch (err: any) {
                     postMsg.emit(id, {
                         type: 'response',
                         data: {
@@ -237,9 +238,9 @@ export async function runIframeTask() {
         // 参数 (address + sighash)
         // sighash: tx, sigtype, inputIndex, input.output.script, input.output,satoshisBN
 
-        // scryptlib: signTx(tx, privateKey, lockingScriptASM: string, inputAmount: number, inputIndex: number, sighashType = DEFAULT_SIGHASH_TYPE, flags=DEFAULT_FLAGS): Signature.toTxFormat()
+        // mvc-scrypt: signTx(tx, privateKey, lockingScriptASM: string, inputAmount: number, inputIndex: number, sighashType = DEFAULT_SIGHASH_TYPE, flags=DEFAULT_FLAGS): Signature.toTxFormat()
 
-        // bsv: bsv.Transaction.sighash.sign(tx: Transaction, privateKey: PrivateKey, sighashType: number, inputIndex: string, subscript: Script, satoshisBN: BN): Signature
+        // mvc: mvc.Transaction.sighash.sign(tx: Transaction, privateKey: PrivateKey, sighashType: number, inputIndex: string, subscript: Script, satoshisBN: BN): Signature
 
         // sCrypt params: tx(Transaciton object), inputIndex(number), sigHashType(SigType), onlySig?(boolean) 成功返回 unlockingScript 或者 Signature string
 
@@ -254,8 +255,8 @@ export async function runIframeTask() {
         }
         return signAnyTx({
             ...options,
-            privateKey: new bsv.PrivateKey(accountKey.privateKey, preAccount?.network ),
-            publicKey: new bsv.PublicKey(accountKey.publicKey, preAccount?.network)
+            privateKey: new mvc.PrivateKey(accountKey.privateKey, preAccount?.network ),
+            publicKey: new mvc.PublicKey(accountKey.publicKey, preAccount?.network)
         })
     })
     handleRequest('logout', async () => {

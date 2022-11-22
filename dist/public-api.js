@@ -294,8 +294,8 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
      */
 
-function Bsv({
-  pageUrl = "https://klouskingsley.github.io/bsv-web-wallet",
+function Mvc({
+  pageUrl = "https://klouskingsley.github.io/mvc-web-wallet",
   debug = false,
 } = {}) {
   const uuid = function () {
@@ -487,8 +487,8 @@ function Bsv({
 }
 
 /* harmony default export */ var public_api = __webpack_exports__["default"] = ({
-  // bsv: Bsv(),
-  Bsv,
+  // mvc: Mvc(),
+  Mvc,
 });
 
 
