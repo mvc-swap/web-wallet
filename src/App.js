@@ -273,14 +273,14 @@ function AccountInfoPanel({ onWithDraw, onTransfer }) {
     <Card className="card" title="Asset" bordered={false}>
       <Form layout="vertical">
         {bsvBalance && (
-          <Form.Item label="MVC balance">
+          <Form.Item label="SPACE balance">
             <Row justify="space-between">
               <Col span={16}>
                 <div>{formatValue(bsvBalance.balance, 8)}</div>
               </Col>
               <Col span={7}>
                 <Button type="link" onClick={() => handleTransfer("")}>
-                  Transfer MVC
+                  Transfer SPACE
                 </Button>
               </Col>
             </Row>
@@ -771,7 +771,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
           if (!isBsv && !token) {
             return null;
           }
-          const tokenSymbol = isBsv ? "MVC" : token.tokenSymbol;
+          const tokenSymbol = isBsv ? "SPACE" : token.tokenSymbol;
           const decimal = isBsv ? 8 : token.tokenDecimal;
           const balance = isBsv ? bsvBalance.balance : token.balance;
           const formatBalance = formatValue(balance, decimal);
@@ -942,7 +942,7 @@ function TransferPanel({
   if (!isBsv && !token) {
     return null;
   }
-  const tokenSymbol = isBsv ? "MVC" : token.tokenSymbol;
+  const tokenSymbol = isBsv ? "SPACE" : token.tokenSymbol;
   const decimal = isBsv ? 8 : token.tokenDecimal;
   const balance = isBsv ? bsvBalance.balance : token.balance;
   const formatBalance = formatValue(balance, decimal);
