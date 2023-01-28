@@ -376,6 +376,7 @@ export async function transferSensibleFt(network: NetWork, signers: SensibleSato
         if (isFtUtxoAmountExceed) {
             // merge utxo
             try {
+                //@ts-ignore
                 await ft.merge()
                 //util.checkFeeRate(tx)
                 await sleep(3000)
