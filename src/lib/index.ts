@@ -7,6 +7,9 @@ import * as util from './util'
 import * as Sentry from "@sentry/react";
 import customSatotxList from './customSatotx.json'
 
+const SCAN_URL = 'https://mvcscan.com'
+const SCAN_URL_TESTNET = 'https://mvcscan.com'
+
 function getSensibleApiPrefix(network: NetWork) {
     const test = network === NetWork.Mainnet ? '' : '-testnet'
     return `https://api-mvc${test}.metasv.com`
@@ -69,14 +72,13 @@ export function getSensibleFtHistoryUrl(network: NetWork, address: string, genes
     return `https://sensiblequery.com${test}/#/ft/utxo/${codehash}/${genesis}/${address}`
 }
 
-
 export function getWocAddressUrl(network: NetWork, address: string) {
     let url = ''
     if (network === NetWork.Mainnet) {
-        url = 'https://scan.mvc.space/address/'
+        url = SCAN_URL + '/address/'
     } 
     if (network === NetWork.Testnet) {
-        url = 'https://scan.mvc.space/address/'
+        url = SCAN_URL_TESTNET + '/address/'
     }
     if (!url) {
         return url
@@ -88,10 +90,10 @@ export function getWocAddressUrl(network: NetWork, address: string) {
 export function getWocTransactionUrl(network: NetWork, txid: string) {
     let url = ''
     if (network === NetWork.Mainnet) {
-        url = 'https://scan.mvc.space/tx/'
+        url = SCAN_URL + '/tx/'
     } 
     if (network === NetWork.Testnet) {
-        url = 'https://scan.mvc.space/tx/'
+        url = SCAN_URL_TESTNET + '/tx/'
     }
     if (!url) {
         return url
