@@ -1,6 +1,6 @@
 // request_account
 
-// transfer_bsv
+// transfer_mvc
 
 // transfer_sensible_ft
 
@@ -145,7 +145,7 @@ function Mvc({
     };
 
     const getAccount = () => rpcAfterPing("getAccount");
-    const getBsvBalance = () => rpcAfterPing("getBsvBalance");
+    const getMvcBalance = () => rpcAfterPing("getMvcBalance");
     const getSensibleFtBalance = () => rpcAfterPing("getSensibleFtBalance");
     const getAddress = () => rpcAfterPing("getAddress");
     const logout = () => rpcAfterPing("logout");
@@ -158,7 +158,7 @@ function Mvc({
       signTx,
       getAccount,
       getAddress,
-      getBsvBalance,
+      getMvcBalance,
       getSensibleFtBalance,
       destroy,
       logout,
@@ -175,10 +175,10 @@ function Mvc({
     const siteMeta = await getSiteMetadata();
     return openPopupAndRequest("requestAccount", siteMeta);
   };
-  const transferBsv = function ({ receivers, noBroadcast }) {
+  const transferMvc = function ({ receivers, noBroadcast }) {
     // 交易成功 resolve  获取资产余额 是否变更
     // 交易失败 reject
-    return openPopupAndRequest("transferBsv", {
+    return openPopupAndRequest("transferMvc", {
       receivers,
       noBroadcast: !!noBroadcast,
     });
@@ -209,13 +209,13 @@ function Mvc({
   return {
     requestAccount,
     exitAccount: backIframe.logout,
-    transferBsv,
+    transferMvc,
     transferSensibleFt,
     transferAll,
     signTx: backIframe.signTx,
     getAccount: backIframe.getAccount,
     getAddress: backIframe.getAddress,
-    getBsvBalance: backIframe.getBsvBalance,
+    getMvcBalance: backIframe.getMvcBalance,
     getSensibleFtBalance: backIframe.getSensibleFtBalance,
     on: outEmitter.on,
   };

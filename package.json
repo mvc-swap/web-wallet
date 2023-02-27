@@ -1,5 +1,5 @@
 {
-  "name": "bsv-web-wallet",
+  "name": "mvc-web-wallet",
   "version": "0.3.3",
   "private": true,
   "main": "dist/public-api.js",

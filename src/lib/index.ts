@@ -1,6 +1,6 @@
 import { mvc, toHex, signTx } from 'mvc-scrypt';
 import { NetWork } from '../web3';
-import {Key, SensibleFt, SensibleSatotx, TransferReceiver, BsvUtxo} from '../state/stateType'
+import {Key, SensibleFt, SensibleSatotx, TransferReceiver, MvcUtxo} from '../state/stateType'
 import axios from 'axios'
 import {SensibleFT} from 'meta-contract'
 import * as util from './util'
@@ -156,7 +156,7 @@ export async function getAddressSensibleFtListByPage(network: NetWork, address: 
 }
 
 // 获取 mvc utxo
-export async function getAddressBsvUtxoList(network: NetWork, address: string, page: number, pageSize: number=16): Promise<BsvUtxo[]> {
+export async function getAddressMvcUtxoList(network: NetWork, address: string, page: number, pageSize: number=16): Promise<MvcUtxo[]> {
     const cursor = (page - 1) * pageSize
     const apiPrefix = getSensibleApiPrefix(network)
     const res = await axios.get(`${apiPrefix}/address/${address}/utxo`)
@@ -172,7 +172,7 @@ export async function getAddressBsvUtxoList(network: NetWork, address: string, p
         })
     }
 
-    // const fakeUtxoList: BsvUtxo[] = [
+    // const fakeUtxoList: MvcUtxo[] = [
     //     {
     //         txId: '6a18f5b859fb4c281affaf8f6245a2fe0813867d4b7d24948da18e099462619b',
     //         outputIndex: 0,
@@ -206,8 +206,8 @@ export async function getAddressBsvUtxoList(network: NetWork, address: string, p
     throw new Error(res.statusText)
 }
 
-// 获取bsv 余额, 这里加入了ft utxo的值，暂时不能用
-export async function getAddressBsvBalance(network: NetWork, address: string): Promise<number | string> {
+// 获取mvc 余额, 这里加入了ft utxo的值，暂时不能用
+export async function getAddressMvcBalance(network: NetWork, address: string): Promise<number | string> {
     const apiPrefix = getSensibleApiPrefix(network)
     const res = await axios.get(`${apiPrefix}/address/${address}/balance`)
     const success = isSensibleSuccess(res)
@@ -217,12 +217,12 @@ export async function getAddressBsvBalance(network: NetWork, address: string): P
     throw new Error(res.statusText)
 }
 
-export async function getAddressBsvBalanceByUtxo(network: NetWork, address: string): Promise<string> {
+export async function getAddressMvcBalanceByUtxo(network: NetWork, address: string): Promise<string> {
     let page = 1
     const pageSize = 16
     let sum: string = '0'
     for (;;) {
-        const utxoList = await getAddressBsvUtxoList(network, address, page, pageSize)
+        const utxoList = await getAddressMvcUtxoList(network, address, page, pageSize)
         const total = utxoList.reduce((prev: any, cur: any) => util.plus(prev, cur.satoshis), '0')
         sum = util.plus(sum, total)
         if (utxoList.length < pageSize) {
@@ -269,7 +269,7 @@ export async function broadcastSensibleQeury(network: NetWork, rawtx: string) {
 
 
 // 发送 token 交易
-const mapBsvFeeError = (err: Error) => {
+const mapMvcFeeError = (err: Error) => {
     if (err.message === "Insufficient balance.") {
         // 将模糊的错误信息转换
         return new Error('Low mvc balance to pay miners')
@@ -324,9 +324,9 @@ export async function transferSensibleFt(network: NetWork, signers: SensibleSato
             outputs: txParseRes.outputs,
         }
     } catch (_err: any) {
-        const err = mapBsvFeeError(_err)
+        const err = mapMvcFeeError(_err)
         const errMsg = err.toString();
-        const isBsvAmountExceed =
+        const isMvcAmountExceed =
           errMsg.indexOf(
             "Mvc utxos should be no more than 3 in "
           ) > 0;
@@ -334,14 +334,14 @@ export async function transferSensibleFt(network: NetWork, signers: SensibleSato
         console.log("broadcast sensible ft error");
         console.error(err);
 
-        if (!isBsvAmountExceed && !isFtUtxoAmountExceed) {
+        if (!isMvcAmountExceed && !isFtUtxoAmountExceed) {
             throw err;
         }
 
         // 如果 mvc utxo 先 merge mvc utxo
-        if (isBsvAmountExceed) {
+        if (isMvcAmountExceed) {
             try {
-                await mergeBsvUtxo(network, senderWif)
+                await mergeMvcUtxo(network, senderWif)
                 await sleep(3000)
             } catch (err) {
                 console.log('merge mvc utxo fail')
@@ -364,7 +364,7 @@ export async function transferSensibleFt(network: NetWork, signers: SensibleSato
                     outputs: txParseRes.outputs,
                 }
             } catch (_err: any) {
-                const err = mapBsvFeeError(_err)
+                const err = mapMvcFeeError(_err)
                 console.log('ft transfer fail after mvc utxo merge')
                 console.error(err)
                 const errMsg = err.toString()
@@ -403,7 +403,7 @@ export async function transferSensibleFt(network: NetWork, signers: SensibleSato
                     outputs: txParseRes.outputs,
                 }
             } catch (_err: any) {
-                const err = mapBsvFeeError(_err)
+                const err = mapMvcFeeError(_err)
                 console.log('ft transfer fail after ft utxo merge')
                 console.error(err)
                 throw err
@@ -444,7 +444,7 @@ export function unlockP2PKHInput(privateKey: mvc.PrivateKey, tx: mvc.Transaction
 }
 
 // 发送 mvc 交易
-function checkBsvReceiversSatisfied(receivers: TransferReceiver[], tx: any, network: NetWork) {
+function checkMvcReceiversSatisfied(receivers: TransferReceiver[], tx: any, network: NetWork) {
     let satified = true
     const txAddressAmountMap: {[key: string]: number} = {}
     const getKey = (address: string, amount: any) => {
@@ -467,17 +467,17 @@ function checkBsvReceiversSatisfied(receivers: TransferReceiver[], tx: any, netw
     }
     return satified
 }
-export async function transferBsv(network: NetWork, senderWif: string, receivers: TransferReceiver[], noBroadcast: boolean=false, allUtxos: boolean=false) {
+export async function transferMvc(network: NetWork, senderWif: string, receivers: TransferReceiver[], noBroadcast: boolean=false, allUtxos: boolean=false) {
     // 1. 获取用户 utxo 列表
     // 2. 判断 utxo 金额 是否 满足 receivers 金额
     // 3. 构造交易
     // 4. 广播交易
     console.log('arguments', network, senderWif, receivers)
     const address = new mvc.PrivateKey(senderWif, network).toAddress(network)
-    const balance = await getAddressBsvBalanceByUtxo(network, address)
+    const balance = await getAddressMvcBalanceByUtxo(network, address)
     const totalOutput = receivers.reduce((prev: any, cur) => util.plus(prev, cur.amount), '0')
     if (util.lessThan(balance, totalOutput)) {
-        throw new Error('Insufficient_bsv_Balance')
+        throw new Error('Insufficient_mvc_Balance')
     }
     let utxoValue: string = '0'
     let selectedUtxoList = []
@@ -491,7 +491,7 @@ export async function transferBsv(network: NetWork, senderWif: string, receivers
     
     const pageSize = 16
     for (let page = 1; ;page++) {
-        const utxoResList = await getAddressBsvUtxoList(network, address, page, pageSize)
+        const utxoResList = await getAddressMvcUtxoList(network, address, page, pageSize)
         for (let i = 0; i < utxoResList.length; i++) {
             const item = utxoResList[i]
             utxoValue = util.plus(utxoValue, item.satoshis)
@@ -549,15 +549,15 @@ export async function transferBsv(network: NetWork, senderWif: string, receivers
     const txid = await broadcastSensibleQeury(network, tx.serialize())
     const txParseRes = parseTransaction(network, tx.serialize(true))
 
-    const amountSatified = checkBsvReceiversSatisfied(receivers, tx, network)
+    const amountSatified = checkMvcReceiversSatisfied(receivers, tx, network)
     if (!amountSatified) {
         console.log(util.safeJsonStringify({
-            type: 'bsvTransferAmountNotSatified',
+            type: 'mvcTransferAmountNotSatified',
             txid: tx.hash,
             receivers,
             outputs: txParseRes.outputs,
         }))
-        Sentry.captureMessage(`bsvTransferAmountNotSatified_${address}_${tx.hash}`);
+        Sentry.captureMessage(`mvcTransferAmountNotSatified_${address}_${tx.hash}`);
     }
     return {
         txid,
@@ -567,9 +567,9 @@ export async function transferBsv(network: NetWork, senderWif: string, receivers
 }
 
 // 合并 mvc utxo, 合并一页
-export async function mergeBsvUtxo(network: NetWork, senderWif: string) {
+export async function mergeMvcUtxo(network: NetWork, senderWif: string) {
     const address = new mvc.PrivateKey(senderWif, network).toAddress(network)
-    const utxolist = await getAddressBsvUtxoList(network, address, 1)
+    const utxolist = await getAddressMvcUtxoList(network, address, 1)
     const tx = new mvc.Transaction()
     tx.feePerKb(500)
     utxolist.forEach(item => {
@@ -696,5 +696,5 @@ export function parseTransaction(network: NetWork, rawtx: string) {
 }
 
 
-(window as any).transferBsv = transferBsv;
+(window as any).transferMvc = transferMvc;
 (window as any).signAnyTx = signAnyTx;

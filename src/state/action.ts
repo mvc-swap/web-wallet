@@ -1,6 +1,6 @@
 import {setGlobalState, getGlobalState } from './state'
-import {generateKeysFromEmailPassword, getAddressSensibleFtList, getAddressBsvBalanceByUtxo, signAnyTx} from '../lib'
-import {Account, BalanceBsv, Key, SensibleFt} from './stateType'
+import {generateKeysFromEmailPassword, getAddressSensibleFtList, getAddressMvcBalanceByUtxo, signAnyTx} from '../lib'
+import {Account, BalanceMvc, Key, SensibleFt} from './stateType'
 import * as createPostMsg from 'post-msg';
 import { SensibleFT } from 'meta-contract';
 import { signTx, mvc, toHex } from 'mvc-scrypt';
@@ -27,10 +27,10 @@ function isSupportToken(codehash: string) {
 }
 
 // app action
-let pollingBsvTimer = 0
+let pollingMvcTimer = 0
 let pollingSensibleFtTimer = 0
-export async function pollingBsvBalance(){
-    clearInterval(pollingBsvTimer)
+export async function pollingMvcBalance(){
+    clearInterval(pollingMvcTimer)
     const fn = async () => {
         const account = getGlobalState('account')
         const key = getGlobalState('key')
@@ -38,14 +38,14 @@ export async function pollingBsvBalance(){
             return
         }
         try {
-            const balance = await getAddressBsvBalanceByUtxo(account.network, key.address)
-            setGlobalState('bsvBalance', {balance})
+            const balance = await getAddressMvcBalanceByUtxo(account.network, key.address)
+            setGlobalState('mvcBalance', {balance})
         } catch (err) {
-            console.log('getAddressBsvBalance err', account.network, key.address, err)
+            console.log('getAddressMvcBalance err', account.network, key.address, err)
         }
     }
     await fn()
-    pollingBsvTimer = window.setInterval(fn, 5000)
+    pollingMvcTimer = window.setInterval(fn, 5000)
 }
 export async function pollingSensibleFtBalance() {
     clearInterval(pollingSensibleFtTimer)
@@ -74,7 +74,7 @@ export async function saveAccount(account: Account | null) {
         setGlobalState('account', account)
         setGlobalState('key', key)
         await pollingSensibleFtBalance()
-        pollingBsvBalance()
+        pollingMvcBalance()
     } else {
         setGlobalState("account", null)
         setGlobalState('key', null)
@@ -98,16 +98,16 @@ export async function runIframeTask() {
     const id = hashdata.id
 
     let preAccount: Account | null = null
-    let preBsvBalance: BalanceBsv | null = null
+    let preMvcBalance: BalanceMvc | null = null
     let preSensibleFtBalance: SensibleFt[] = []
     let accountKey: Key | null = null
-    // let lastBsvBalance: 
+    // let lastMvcBalance: 
 
     postMsg.emit(id, {
         type: 'ready'
     })
 
-    const isBsvBalanceEqual = (b1: BalanceBsv | null, b2: BalanceBsv | null) => {
+    const isMvcBalanceEqual = (b1: BalanceMvc | null, b2: BalanceMvc | null) => {
         if (!b1 && !b2) {
             return true
         }
@@ -152,13 +152,13 @@ export async function runIframeTask() {
             // get balance
             accountKey = generateKeysFromEmailPassword(preAccount.email, preAccount.password, preAccount.network)
             try {
-                const latestBalance = await getAddressBsvBalanceByUtxo(preAccount.network, accountKey.address)
-                const equal = isBsvBalanceEqual(preBsvBalance, {balance: latestBalance})
-                preBsvBalance = {balance: latestBalance}
+                const latestBalance = await getAddressMvcBalanceByUtxo(preAccount.network, accountKey.address)
+                const equal = isMvcBalanceEqual(preMvcBalance, {balance: latestBalance})
+                preMvcBalance = {balance: latestBalance}
                 if (!equal) {
                     postMsg.emit(id, {
-                        type: 'bsvBalance', 
-                        data: preBsvBalance,
+                        type: 'mvcBalance', 
+                        data: preMvcBalance,
                     })
                 }
             } catch (err) {}
@@ -219,9 +219,9 @@ export async function runIframeTask() {
             network: preAccount.network,
         }
     });
-    handleRequest('getBsvBalance', async () => {
+    handleRequest('getMvcBalance', async () => {
         await requestLatestData()
-        return preBsvBalance
+        return preMvcBalance
     })
     handleRequest('getSensibleFtBalance', async () => {
         await requestLatestData()

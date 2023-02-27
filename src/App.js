@@ -27,7 +27,7 @@ import {
   getWocAddressUrl,
   formatValue,
   isValidAddress,
-  transferBsv,
+  transferMvc,
   transferSensibleFt,
   getWocTransactionUrl,
   getSensibleFtHistoryUrl,
@@ -221,7 +221,7 @@ function LoginPanel() {
 function AccountInfoPanel({ onWithDraw, onTransfer }) {
   const [key] = useGlobalState("key");
   const [account] = useGlobalState("account");
-  const [bsvBalance] = useGlobalState("bsvBalance");
+  const [mvcBalance] = useGlobalState("mvcBalance");
   const [sensibleFtList] = useGlobalState("sensibleFtList");
 
   if (!key || !account) {
@@ -272,11 +272,11 @@ function AccountInfoPanel({ onWithDraw, onTransfer }) {
     </Card>,
     <Card className="card" title="Asset" bordered={false}>
       <Form layout="vertical">
-        {bsvBalance && (
+        {mvcBalance && (
           <Form.Item label="SPACE balance">
             <Row justify="space-between">
               <Col span={16}>
-                <div>{formatValue(bsvBalance.balance, 8)}</div>
+                <div>{formatValue(mvcBalance.balance, 8)}</div>
               </Col>
               <Col span={7}>
                 <Button type="link" onClick={() => handleTransfer("")}>
@@ -387,7 +387,7 @@ async function getRabins(rabinApis = []) {
 
 function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
   const [key] = useGlobalState("key");
-  const [bsvBalance] = useGlobalState("bsvBalance");
+  const [mvcBalance] = useGlobalState("mvcBalance");
   const [account] = useGlobalState("account");
   const [sensibleFtList] = useGlobalState("sensibleFtList");
   const [form] = Form.useForm();
@@ -396,11 +396,11 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
   useOnceCall(() => {
     const values = {};
     initDatas.forEach((data, index) => {
-      const isBsv = !data.genesis;
+      const isMvc = !data.genesis;
       const token = sensibleFtList.find(
         (item) => item.genesis === data.genesis
       );
-      const decimal = isBsv ? 8 : token.tokenDecimal;
+      const decimal = isMvc ? 8 : token.tokenDecimal;
       values[`receiverList${index}`] = data.receivers.map((item) => {
         return {
           address: item.address,
@@ -409,26 +409,26 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
       });
     });
     form.setFieldsValue(values);
-  }, key && bsvBalance);
+  }, key && mvcBalance);
 
   if (!key) {
     return null;
   }
-  if (!bsvBalance) {
+  if (!mvcBalance) {
     return null;
   }
 
   const handleSubmit = async () => {
     const receiverLists = form.getFieldsValue();
 
-    const broadcastBsv = async ({ formatReceiverList, noBroadcast }) => {
+    const broadcastMvc = async ({ formatReceiverList, noBroadcast }) => {
       setLoading(true);
       let transferRes;
       let txid = "";
       try {
         if (noBroadcast === true) {
           const allUtxos = true;
-          const tx = await await transferBsv(
+          const tx = await await transferMvc(
             account.network,
             key.privateKey,
             formatReceiverList,
@@ -437,7 +437,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
           );
           return tx;
         }
-        const res = await await transferBsv(
+        const res = await await transferMvc(
           account.network,
           key.privateKey,
           formatReceiverList
@@ -447,7 +447,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
       } catch (err) {
         const msg = "broadcast error: " + err.toString();
         Sentry.captureException(err);
-        Sentry.captureMessage(`bsvTransferFail_${key.address}`);
+        Sentry.captureMessage(`mvcTransferFail_${key.address}`);
         onTransferCallback({
           error: msg,
         });
@@ -455,7 +455,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
         console.error(err);
         message.error(err.toString());
       }
-      Sentry.captureMessage(`bsvTransferSuccess_${key.address}_${txid}`);
+      Sentry.captureMessage(`mvcTransferSuccess_${key.address}_${txid}`);
       return transferRes;
     };
 
@@ -499,19 +499,19 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
       return transferRes;
     };
 
-    const broadcastBsvAndToken = async () => {
+    const broadcastMvcAndToken = async () => {
       const txs = [];
       const transferRes = [];
       let utxos = [];
       // mvc transaction must be the first one
       for (let i = 0; i < initDatas.length; i++) {
         const data = initDatas[i];
-        const isBsv = !data.genesis;
+        const isMvc = !data.genesis;
         const token = sensibleFtList.find(
           (item) => item.genesis === data.genesis
         );
-        const decimal = isBsv ? 8 : token.tokenDecimal;
-        const balance = isBsv ? bsvBalance.balance : token.balance;
+        const decimal = isMvc ? 8 : token.tokenDecimal;
+        const balance = isMvc ? mvcBalance.balance : token.balance;
         const rabinApis = data.rabinApis;
         const totalOutputValueFloatDuck = receiverLists[
           `receiverList${i}`
@@ -535,8 +535,8 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
             amount: item.amount,
           };
         });
-        if (isBsv) {
-          const tx = await broadcastBsv({
+        if (isMvc) {
+          const tx = await broadcastMvc({
             formatReceiverList,
             noBroadcast: true,
           });
@@ -552,7 +552,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
           const output = tx.outputs[outputIndex];
           txs.push({
             tx: tx,
-            isBsv: true,
+            isMvc: true,
             noBroadcast: !!data.noBroadcast,
           });
           utxos = [];
@@ -579,7 +579,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
           txs.push({
             tx,
             routeCheckTx,
-            isBsv: false,
+            isMvc: false,
             noBroadcast: !!data.noBroadcast,
           });
           const outputIndex = tx.outputs.length - 1;
@@ -619,10 +619,10 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
           outputs: parseTransaction(account.network, txInfo.tx.serialize(true))
             .outputs,
           fee: txInfo.tx.getFee(),
-          isBsv: txInfo.isBsv,
+          isMvc: txInfo.isMvc,
           txHex: txInfo.tx.serialize(true),
         };
-        if (!resItem.isBsv) {
+        if (!resItem.isMvc) {
           resItem.routeCheckTxid = txInfo.routeCheckTx.hash;
           resItem.routeCheckTxHex = txInfo.routeCheckTx.serialize(true);
           resItem.routeCheckOutputs = parseTransaction(
@@ -642,18 +642,18 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
       });
     };
 
-    const buildBsvAndTokenTx = async () => {
+    const buildMvcAndTokenTx = async () => {
       const txs = {};
       let utxos = [];
       // mvc transaction must be the first one
       for (let i = 0; i < initDatas.length; i++) {
         const data = initDatas[i];
-        const isBsv = !data.genesis;
+        const isMvc = !data.genesis;
         const token = sensibleFtList.find(
           (item) => item.genesis === data.genesis
         );
-        const decimal = isBsv ? 8 : token.tokenDecimal;
-        const balance = isBsv ? bsvBalance.balance : token.balance;
+        const decimal = isMvc ? 8 : token.tokenDecimal;
+        const balance = isMvc ? mvcBalance.balance : token.balance;
         const rabinApis = data.rabinApis;
         const totalOutputValueFloatDuck = receiverLists[
           `receiverList${i}`
@@ -677,8 +677,8 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
             amount: item.amount,
           };
         });
-        if (isBsv) {
-          const tx = await broadcastBsv({
+        if (isMvc) {
+          const tx = await broadcastMvc({
             formatReceiverList,
             noBroadcast: true,
           });
@@ -692,7 +692,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
             return message.error(msg);
           }
           const output = tx.outputs[outputIndex];
-          txs.bsvRawTx = tx.toString();
+          txs.mvcRawTx = tx.toString();
           utxos = [];
           utxos.push({
             txId: tx.id,
@@ -742,7 +742,7 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
       title: "Confirm the transaction",
       onOk: () => {
         //broadcastAll();
-        broadcastBsvAndToken();
+        broadcastMvcAndToken();
       },
     });
   };
@@ -763,28 +763,28 @@ function TransferAllPanel({ initDatas = [], onCancel, onTransferCallback }) {
     >
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         {initDatas.map((data, index) => {
-          const isBsv = !data.genesis;
+          const isMvc = !data.genesis;
           const token = sensibleFtList.find(
             (item) => item.genesis === data.genesis
           );
 
-          if (!isBsv && !token) {
+          if (!isMvc && !token) {
             return null;
           }
-          const tokenSymbol = isBsv ? "SPACE" : token.tokenSymbol;
-          const decimal = isBsv ? 8 : token.tokenDecimal;
-          const balance = isBsv ? bsvBalance.balance : token.balance;
+          const tokenSymbol = isMvc ? "SPACE" : token.tokenSymbol;
+          const decimal = isMvc ? 8 : token.tokenDecimal;
+          const balance = isMvc ? mvcBalance.balance : token.balance;
           const formatBalance = formatValue(balance, decimal);
           const canEdit = !(data.receivers.length > 0);
           return (
             <div key={index}>
               <div className="transfer-line">
-                {isBsv ? `Coin: ${tokenSymbol}` : `Token: ${tokenSymbol}`}
+                {isMvc ? `Coin: ${tokenSymbol}` : `Token: ${tokenSymbol}`}
               </div>
-              {!isBsv && (
+              {!isMvc && (
                 <div className="transfer-line">Genesis: {token.genesis}</div>
               )}
-              {!isBsv && (
+              {!isMvc && (
                 <div className="transfer-line">Codehash: {token.codehash}</div>
               )}
               <Row justify="space-between" style={{ margin: "10px 0" }}>
@@ -895,7 +895,7 @@ function TransferPanel({
   noBroadcast,
 }) {
   const [key] = useGlobalState("key");
-  const [bsvBalance] = useGlobalState("bsvBalance");
+  const [mvcBalance] = useGlobalState("mvcBalance");
   const [account] = useGlobalState("account");
   const [sensibleFtList] = useGlobalState("sensibleFtList");
   const [form] = Form.useForm();
@@ -903,9 +903,9 @@ function TransferPanel({
   const canEdit = !(initReceivers.length > 0);
 
   useOnceCall(() => {
-    const isBsv = genesis === "";
+    const isMvc = genesis === "";
     const token = sensibleFtList.find((item) => item.genesis === genesis);
-    const decimal = isBsv ? 8 : token.tokenDecimal;
+    const decimal = isMvc ? 8 : token.tokenDecimal;
     console.log(
       "initReceivers",
       initReceivers,
@@ -924,27 +924,27 @@ function TransferPanel({
         };
       }),
     });
-  }, key && bsvBalance && initReceivers.length);
+  }, key && mvcBalance && initReceivers.length);
 
   if (!key) {
     return null;
   }
-  if (!bsvBalance) {
+  if (!mvcBalance) {
     return null;
   }
   if (genesis && !sensibleFtList.length) {
     return null;
   }
 
-  const isBsv = genesis === "";
+  const isMvc = genesis === "";
   const token = sensibleFtList.find((item) => item.genesis === genesis);
 
-  if (!isBsv && !token) {
+  if (!isMvc && !token) {
     return null;
   }
-  const tokenSymbol = isBsv ? "SPACE" : token.tokenSymbol;
-  const decimal = isBsv ? 8 : token.tokenDecimal;
-  const balance = isBsv ? bsvBalance.balance : token.balance;
+  const tokenSymbol = isMvc ? "SPACE" : token.tokenSymbol;
+  const decimal = isMvc ? 8 : token.tokenDecimal;
+  const balance = isMvc ? mvcBalance.balance : token.balance;
   const formatBalance = formatValue(balance, decimal);
 
   const handleSubmit = async () => {
@@ -972,12 +972,12 @@ function TransferPanel({
       };
     });
 
-    const broadcastBsv = async () => {
+    const broadcastMvc = async () => {
       setLoading(true);
       let txid = "";
       let transferRes;
       try {
-        const res = await transferBsv(
+        const res = await transferMvc(
           account.network,
           key.privateKey,
           formatReceiverList,
@@ -1000,7 +1000,7 @@ function TransferPanel({
         const msg = "broadcast error: " + err.toString();
         console.log(
           util.safeJsonStringify({
-            type: "bsvTransferFail",
+            type: "mvcTransferFail",
             msg,
             account: {
               network: account.network,
@@ -1010,7 +1010,7 @@ function TransferPanel({
           })
         );
         Sentry.captureException(err);
-        Sentry.captureMessage(`bsvTransferFail_${key.address}`);
+        Sentry.captureMessage(`mvcTransferFail_${key.address}`);
         onTransferCallback({
           error: msg,
         });
@@ -1022,7 +1022,7 @@ function TransferPanel({
       if (txid) {
         console.log(
           util.safeJsonStringify({
-            type: "bsvTransferSuccess",
+            type: "mvcTransferSuccess",
             account: {
               network: account.network,
               address: key.address,
@@ -1032,7 +1032,7 @@ function TransferPanel({
             ...transferRes,
           })
         );
-        Sentry.captureMessage(`bsvTransferSuccess_${key.address}_${txid}`);
+        Sentry.captureMessage(`mvcTransferSuccess_${key.address}_${txid}`);
         onTransferCallback({
           response: {
             ...transferRes,
@@ -1161,7 +1161,7 @@ function TransferPanel({
     Modal.confirm({
       title: "Confirm the transaction",
       onOk: () => {
-        isBsv ? broadcastBsv() : broadcastSensibleFt();
+        isMvc ? broadcastMvc() : broadcastSensibleFt();
       },
     });
   };
@@ -1183,12 +1183,12 @@ function TransferPanel({
     >
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <div className="transfer-line">
-          {isBsv ? `Coin: ${tokenSymbol}` : `Token: ${tokenSymbol}`}
+          {isMvc ? `Coin: ${tokenSymbol}` : `Token: ${tokenSymbol}`}
         </div>
-        {!isBsv && (
+        {!isMvc && (
           <div className="transfer-line">Genesis: {token.genesis}</div>
         )}
-        {!isBsv && (
+        {!isMvc && (
           <div className="transfer-line">Codehash: {token.codehash}</div>
         )}
         <Row justify="space-between" style={{ margin: "10px 0" }}>
@@ -1293,7 +1293,7 @@ function App() {
   const [trasferSensibleFtGenesis, setTrasferSensibleFtGenesis] = useState("");
   const [account] = useGlobalState("account");
   const [key] = useGlobalState("key");
-  const [bsvBalance] = useGlobalState("bsvBalance");
+  const [mvcBalance] = useGlobalState("mvcBalance");
   const [sensibleFtList] = useGlobalState("sensibleFtList");
   const [initReceivers, setInitReceivers] = useState([]);
   const [initDatas, setInitDatas] = useState([]);
@@ -1342,10 +1342,10 @@ function App() {
   // todo 数值计算 使用 bignumber
   // todo 此处接收 postMessage 消息，处理登录,transfer
   const requestAccountCondition = key?.address && account?.network;
-  const transferBsvCondition =
+  const transferMvcCondition =
     requestAccountCondition &&
-    bsvBalance &&
-    util.greaterThanEqual(bsvBalance.balance, 0);
+    mvcBalance &&
+    util.greaterThanEqual(mvcBalance.balance, 0);
   useOnceCall(() => {
     const data = getHashData();
     if (!data || data.data.type !== "request") {
@@ -1379,7 +1379,7 @@ function App() {
     }
 
     const { method, params } = data.data.data;
-    if (method !== "transferBsv") {
+    if (method !== "transferMvc") {
       return;
     }
     // balance check
@@ -1387,14 +1387,14 @@ function App() {
       (prev, cur) => util.plus(prev, cur.amount),
       0
     );
-    if (util.greaterThan(outputTotal, bsvBalance.balance)) {
+    if (util.greaterThan(outputTotal, mvcBalance.balance)) {
       handlePopResponseCallback({ error: "insufficient mvc balance" });
       return;
     }
     setTransfering(true);
     setInitReceivers(params.receivers);
     setInitNoBroadcast(params.noBroadcast);
-  }, !!transferBsvCondition);
+  }, !!transferMvcCondition);
   useOnceCall(() => {
     const data = getHashData();
     console.log("hashdata", data);
@@ -1427,7 +1427,7 @@ function App() {
     setInitReceivers(params.receivers);
     setRabins(params.rabinApis);
     setInitNoBroadcast(params.noBroadcast);
-  }, !!transferBsvCondition);
+  }, !!transferMvcCondition);
   useOnceCall(() => {
     const data = getHashData();
     console.log("mvc hash data", data);
@@ -1442,14 +1442,14 @@ function App() {
     // balance check
     params.datas.forEach((item) => {
       // balance check
-      const isBsv = !item.genesis;
+      const isMvc = !item.genesis;
       const ft = sensibleFtList.find((v) => v.genesis === item.genesis);
 
       const outputTotal = item.receivers.reduce(
         (prev, cur) => util.plus(prev, cur.amount),
         0
       );
-      if (isBsv && util.greaterThan(outputTotal, bsvBalance.balance)) {
+      if (isMvc && util.greaterThan(outputTotal, mvcBalance.balance)) {
         handlePopResponseCallback({ error: "insufficient mvc balance" });
         return;
       }
@@ -1460,7 +1460,7 @@ function App() {
       setTransfering(true);
       setInitDatas(params.datas);
     });
-  }, !!transferBsvCondition);
+  }, !!transferMvcCondition);
   useEffect(() => {
     const obu = window.onbeforeunload;
     window.onbeforeunload = function (event) {

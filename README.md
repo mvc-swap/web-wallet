@@ -17,28 +17,22 @@ const mvc = new Mvc();
 await mvc.requestAccount().then();
 // 获取钱包账户信息
 const accountInfo = await mvc.getAccount();
-// 获取bsv 余额
-const bsvBalance = await mvc.getBsvBalance();
-// 发送bsv
-const transferBsvRes = await mvc.transferBsv({
+// 获取mvc 余额
+const mvcBalance = await mvc.getMvcBalance();
+// 发送mvc
+const transferMvcRes = await mvc.transferMvc({
   receivers: [{ address: "xxx", amount: 333 }],
 });
-// 发送 sensible ft
+// 发送 ft
 const transferFtTres = await mvc.transferSensibleFt({
   receivers: [{ address: "xxx", amount: 344 }],
   codehash: "codehash",
   genesis: "genesis",
-  rabinApis: [
-    "https://s1.satoplay.com"
-]
 });
 const transferAll = await mvc.transferAll([{
     receivers: [{ address: "xxx", amount: 344 }],
   codehash: "codehash",
   genesis: "genesis",
-  rabinApis: [
-    "https://s1.satoplay.com"
-]
 }])
 ```
 
@@ -60,13 +54,13 @@ const transferAll = await mvc.transferAll([{
 
 获取钱包地址
 
-### mvc.getBsvBalance(): Promise<{balance: number}>
+### mvc.getMvcBalance(): Promise<{balance: number}>
 
 获取钱包 mvc 余额，balance 单位为 satoshi
 
 ### mvc.getSensibleFtBalance(): Promise<Array<SensibleFt>>
 
-获取钱包 sensible ft 余额
+获取钱包 ft 余额
 
 ```ts
 interface SensibleFt {
@@ -79,7 +73,7 @@ interface SensibleFt {
 }
 ```
 
-### mvc.transferBsv({receivers: Array<Receiver>}): Promise<{txid: string}>
+### mvc.transferMvc({receivers: Array<Receiver>}): Promise<{txid: string}>
 
 mvc 转账
 
@@ -92,7 +86,7 @@ interface Receiver {
 
 ### mvc.transferSensibleFt({receivers: Array<Receiver>, codehash: string, genesis: string, rabinApis: Array<String>}): Promise<{txid: string}>
 
-sensible ft 转账
+ft 转账
 
 ```ts
 interface Receiver {
@@ -104,7 +98,7 @@ interface Receiver {
 
 ### mvc.transferAll([{receivers: Array<Receiver>, codehash: string, genesis: string, rabinApis: Array<String>}): Promise<{txid: string}]>
 
-mvc 和 sensible ft 混合转账
+mvc 和 ft 混合转账
 
 ```ts
 interface Receiver {

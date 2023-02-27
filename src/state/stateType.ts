@@ -12,7 +12,7 @@ export interface Key {
     publicKey: string
 }
 
-export interface BalanceBsv {
+export interface BalanceMvc {
     balance: string
 }
 
@@ -34,7 +34,7 @@ export interface SensibleFt {
 export interface State {
     account: Account | null
     key: Key | null
-    bsvBalance: BalanceBsv | null
+    mvcBalance: BalanceMvc | null
     sensibleFtList: SensibleFt[]
     satotxConfigMap: Map<string, SensibleSatotx[]>
 }
@@ -44,7 +44,7 @@ export interface TransferReceiver {
     amount: string
 }
 
-export interface BsvUtxo{
+export interface MvcUtxo{
     txId:string 
     outputIndex: number
     satoshis: number

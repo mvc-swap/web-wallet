@@ -10,7 +10,7 @@ const defaultSatotx: SensibleSatotx = {
 const initialState: State = {
     account: null,
     key: null,
-    bsvBalance: null,
+    mvcBalance: null,
     sensibleFtList: [],
     satotxConfigMap: new Map()
 };

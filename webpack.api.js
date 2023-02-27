@@ -6,7 +6,7 @@ module.exports = {
     minimize: false,
   },
   output: {
-    library: "bsvWebWallet",
+    library: "mvcWebWallet",
     libraryTarget: "umd",
     path: path.resolve(__dirname, "dist"),
     filename: "public-api.js",
