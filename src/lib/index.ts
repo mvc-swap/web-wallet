@@ -8,7 +8,7 @@ import * as Sentry from "@sentry/react";
 import customSatotxList from './customSatotx.json'
 
 const SCAN_URL = 'https://mvcscan.com'
-const SCAN_URL_TESTNET = 'https://mvcscan.com'
+const SCAN_URL_TESTNET = 'https://test.mvcscan.com'
 
 function getSensibleApiPrefix(network: NetWork) {
     const test = network === NetWork.Mainnet ? '' : '-testnet'
