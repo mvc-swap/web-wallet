@@ -3,7 +3,7 @@
 ## install
 
 ```
-npm i -S git+https://github.com/klouskingsley/mvc-web-wallet.git
+npm i -S git+https://github.com/mvc-swap/web-wallet.git
 ```
 
 ## Usage
@@ -13,17 +13,17 @@ import webWallet from "mvc-web-wallet";
 const { Mvc } = webWallet;
 
 const mvc = new Mvc();
-// 连接到钱包
+// connect wallet
 await mvc.requestAccount().then();
-// 获取钱包账户信息
+// get wallet account info
 const accountInfo = await mvc.getAccount();
-// 获取mvc 余额
+// get mvc balance
 const mvcBalance = await mvc.getMvcBalance();
-// 发送mvc
+// send mvc
 const transferMvcRes = await mvc.transferMvc({
   receivers: [{ address: "xxx", amount: 333 }],
 });
-// 发送 ft
+// send token
 const transferFtTres = await mvc.transferSensibleFt({
   receivers: [{ address: "xxx", amount: 344 }],
   codehash: "codehash",
@@ -40,27 +40,27 @@ const transferAll = await mvc.transferAll([{
 
 ### mvc.requestAccount(): Promise<void>
 
-连接到钱包
+Connect to wallet
 
 ### mvc.exitAccount(): Promise<void>
 
-退出登录
+Log out
 
 ### mvc.getAccount(): Promise<{name: string, network: 'mainnet' | 'testnet'}>
 
-获取钱包账户信息
+Get account info
 
 ### mvc.getAddress(): Promise<string>
 
-获取钱包地址
+Get Wallet address
 
 ### mvc.getMvcBalance(): Promise<{balance: number}>
 
-获取钱包 mvc 余额，balance 单位为 satoshi
+Get space balance, satoshi
 
 ### mvc.getSensibleFtBalance(): Promise<Array<SensibleFt>>
 
-获取钱包 ft 余额
+Get token balance
 
 ```ts
 interface SensibleFt {
@@ -75,7 +75,7 @@ interface SensibleFt {
 
 ### mvc.transferMvc({receivers: Array<Receiver>}): Promise<{txid: string}>
 
-mvc 转账
+Transfer space
 
 ```ts
 interface Receiver {
@@ -86,7 +86,7 @@ interface Receiver {
 
 ### mvc.transferSensibleFt({receivers: Array<Receiver>, codehash: string, genesis: string, rabinApis: Array<String>}): Promise<{txid: string}>
 
-ft 转账
+Transfer token
 
 ```ts
 interface Receiver {
@@ -98,7 +98,7 @@ interface Receiver {
 
 ### mvc.transferAll([{receivers: Array<Receiver>, codehash: string, genesis: string, rabinApis: Array<String>}): Promise<{txid: string}]>
 
-mvc 和 ft 混合转账
+Transfer space and token
 
 ```ts
 interface Receiver {

@@ -30,7 +30,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
      */
 
 function Mvc({
-  pageUrl = "https://klouskingsley.github.io/mvc-web-wallet",
+  pageUrl = "https://github.com/mvc-swap/web-wallet",
   debug = false,
 } = {}) {
   const uuid = function () {

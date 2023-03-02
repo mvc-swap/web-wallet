@@ -62,7 +62,7 @@ function Header() {
     window.open(url);
   };
   const handleSourceCode = () => {
-    window.open("http://github.com");
+    window.open("https://github.com/mvc-swap/web-wallet");
   };
 
   const decodeTx = () => {
@@ -135,18 +135,18 @@ function LoginPanel() {
 
   const handleOnFinish = () => {
     Modal.confirm({
-      title: "安全注意",
+      title: "Attention",
       content: (
         <div>
-          Web钱包的私钥是通过用户的邮箱和密码实时计算得到，不会上传服务器，也不会保存在本地(代码见
+          The private key of the web wallet is calculated in real-time through the user's email address and password, and will not be uploaded to the server or stored locally (see&nbsp; 
           <a
-            href="https://github.com/klouskingsley/mvc-web-wallet"
+            href="https://github.com/mvc-swap/web-wallet"
             target="_blank"
             rel="noreferrer"
           >
             github
           </a>
-          )。仅供方便用户测试之用，不适合存放大量资金，建议用户妥善保管邮箱+密码组合以防资金丢失，或在使用完成之后将剩余资金转移。邮箱+密码组合丢失(忘记，被盗等情形)会导致资产丢失
+          &nbsp;for the code). It is only for the convenience of user testing and is not suitable for depositing a large number of funds. It is recommended that users keep the email + password combination properly to prevent the loss of funds or transfer the remaining funds after use. Loss of mailbox + password combination (forgotten, stolen, etc.) will lead to asset loss.
         </div>
       ),
       onOk: () => {
@@ -202,7 +202,7 @@ function LoginPanel() {
           </Select>
         </Form.Item>
         <Form.Item>
-          说明：Web钱包的私钥是通过用户的邮箱和密码实时计算得到(无需注册)，每次输入相同的邮箱和密码登录即可计算出相同的私钥，私钥不会上传服务器，也不会保存在本地，仅供方便用户测试之用，不适合存放大量资金，建议用户妥善保管邮箱+密码组合以防资金丢失。
+          Note: The private key of the web wallet is calculated in real time through the user's email address and password (no registration required), and the same private key can be calculated every time you enter the same email address and password to log in. The private key will not be uploaded to the server, nor will it Saved locally, it is only for the convenience of users for testing, and is not suitable for storing large amounts of funds. It is recommended that users keep the email + password combination properly to prevent loss of funds. 
         </Form.Item>
         <Form.Item>
           <Button
