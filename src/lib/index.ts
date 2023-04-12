@@ -106,7 +106,7 @@ export async function signAnyTx(options: any) {
     const {txHex, scriptHex, inputIndex, privateKey, publicKey, satoshis} = options
     const tx = new mvc.Transaction(txHex)
     const script = mvc.Script.fromBuffer(Buffer.from(scriptHex, 'hex'))
-    const sig = toHex(signTx(tx, privateKey , script.toASM(), Number(satoshis), inputIndex))
+    const sig = toHex(signTx(tx, privateKey , script, Number(satoshis), inputIndex))
     
     return {
         publicKey: publicKey.toString(),
