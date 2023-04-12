@@ -145,6 +145,7 @@ export async function getAddressSensibleFtListByPage(network: NetWork, address: 
             return {
                 genesis: item.genesis,
                 codehash: item.codeHash,
+                sensibleId: item.sensibleId,
                 tokenName: item.name,
                 tokenSymbol: item.symbol,
                 tokenDecimal: item.decimal,
@@ -648,6 +649,7 @@ export function parseTransaction(network: NetWork, rawtx: string) {
                 decimal: ftToken.decimalNum,
                 name: ftToken.tokenName,
                 symbol: ftToken.tokenSymbol,
+                sensibleId: ftToken.sensibleId,
             }
         }
         return ret
@@ -682,6 +684,7 @@ export function parseTransaction(network: NetWork, rawtx: string) {
                 name: ftToken.tokenName,
                 symbol: ftToken.tokenSymbol,
                 amount: ftToken.tokenAmount,
+                sensibleId: ftToken.sensibleId,
             }
         }
         return ret
