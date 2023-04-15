@@ -1,9 +1,8 @@
 import {setGlobalState, getGlobalState } from './state'
-import {generateKeysFromEmailPassword, getAddressSensibleFtList, getAddressMvcBalanceByUtxo, signAnyTx} from '../lib'
+import {generateKeysFromEmailPassword, getAddressSensibleFtList, getAddressMvcBalanceByUtxo, signAnyTx, getAddressMvcBalance} from '../lib'
 import {Account, BalanceMvc, Key, SensibleFt} from './stateType'
 import * as createPostMsg from 'post-msg';
-import { SensibleFT } from 'meta-contract';
-import { signTx, mvc, toHex } from 'mvc-scrypt';
+import { mvc } from 'mvc-scrypt';
 
 // local account storage
 const accountStorageKey = 'accountStorageKey'
@@ -38,7 +37,7 @@ export async function pollingMvcBalance(){
             return
         }
         try {
-            const balance = await getAddressMvcBalanceByUtxo(account.network, key.address)
+            const balance = await getAddressMvcBalance(account.network, key.address)
             setGlobalState('mvcBalance', {balance})
         } catch (err) {
             console.log('getAddressMvcBalance err', account.network, key.address, err)

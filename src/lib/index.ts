@@ -11,8 +11,11 @@ const SCAN_URL = 'https://mvcscan.com'
 const SCAN_URL_TESTNET = 'https://test.mvcscan.com'
 
 function getSensibleApiPrefix(network: NetWork) {
-    const test = network === NetWork.Mainnet ? '' : '-testnet'
-    return `https://api-mvc${test}.metasv.com`
+    if (network === NetWork.Mainnet) {
+        return 'https://mainnet.mvcapi.com'
+    } else {
+        return 'https://testnet.mvcapi.com'
+    }
 }
 function isSensibleSuccess(res: any) {
     return res.status === 200
@@ -208,11 +211,10 @@ export async function getAddressMvcUtxoList(network: NetWork, address: string, p
 }
 
 // 获取mvc 余额, 这里加入了ft utxo的值，暂时不能用
-export async function getAddressMvcBalance(network: NetWork, address: string): Promise<number | string> {
+export async function getAddressMvcBalance(network: NetWork, address: string): Promise<string> {
     const apiPrefix = getSensibleApiPrefix(network)
     const res = await axios.get(`${apiPrefix}/address/${address}/balance`)
-    const success = isSensibleSuccess(res)
-    if (success) {
+    if (res.status == 200) {
         return util.plus(res.data.confirmed, res.data.unconfirmed)
     }
     throw new Error(res.statusText)
