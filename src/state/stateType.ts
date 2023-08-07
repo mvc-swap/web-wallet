@@ -16,11 +16,6 @@ export interface BalanceMvc {
     balance: string
 }
 
-export interface SensibleSatotx {
-    satotxApiPrefix: string
-    satotxPubKey: string
-}
-
 export interface SensibleFt {
     genesis: string
     codehash: string
@@ -28,7 +23,6 @@ export interface SensibleFt {
     tokenSymbol: string
     tokenDecimal: number
     balance: string
-    satotx: SensibleSatotx | null
 }
 
 export interface State {
@@ -36,7 +30,6 @@ export interface State {
     key: Key | null
     mvcBalance: BalanceMvc | null
     sensibleFtList: SensibleFt[]
-    satotxConfigMap: Map<string, SensibleSatotx[]>
 }
 
 export interface TransferReceiver {

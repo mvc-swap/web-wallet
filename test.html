@@ -26,7 +26,7 @@
       //   document.body.appendChild(div);
 
       const mvc = mvcWebWallet.default.Mvc({
-        pageUrl: "http://localhost:3001/mvc-web-wallet",
+        pageUrl: "http://localhost:3000/mvc-web-wallet",
         debug: true,
       });
 
@@ -76,19 +76,7 @@
       // });
 
       const rabinApis = [
-        "https://s1.satoplay.com",
-        "https://satotx.showpay.top",
-        "https://satotx.volt.id",
-        "https://satotx.metasv.com",
-        "https://satotx.tswap.io",
       ];
-      //     const rabinApis = [
-      // "https://satotx.showpay.top",
-      // "https://satotx2.showpay.top",
-      // "https://satotx3.showpay.top",
-      // "https://s1.satoplay.com",
-      // "https://satotx.metasv.com"
-      // ];
 
       //mvc.transferSensibleFt({
       //  codehash: "514776383faa66e4a65808904d4d6724e4774fbe",
@@ -105,29 +93,29 @@
       //  console.log(res)
       //});
 
-      // mvc
-      //   .transferAll([
-      //     {
-      //       receivers: [
-      //         {
-      //           address: "mzJR1zKcZCZvMJj87rVqmFFxmaVEe62BBW",
-      //           amount: 102692,
-      //         },
-      //       ],
-      //     },
-      //     {
-      //       receivers: [
-      //         {
-      //           address: "mzJR1zKcZCZvMJj87rVqmFFxmaVEe62BBW",
-      //           amount: "1000000",
-      //         },
-      //       ],
-      //       codehash: "514776383faa66e4a65808904d4d6724e4774fbe",
-      //       genesis: "b0f7131b4b72a5b90910c008c041e24a71524e6d",
-      //       rabinApis,
-      //     },
-      //   ])
-      //   .then((res) => console.log("transferAll", res));
+      mvc
+        .transferAll([
+          {
+            receivers: [
+              {
+                address: "mzJR1zKcZCZvMJj87rVqmFFxmaVEe62BBW",
+                amount: 102692,
+              },
+            ],
+          },
+          {
+            receivers: [
+              {
+                address: "mzJR1zKcZCZvMJj87rVqmFFxmaVEe62BBW",
+                amount: "1000000",
+              },
+            ],
+            codehash: "a2421f1e90c6048c36745edd44fad682e8644693",
+            genesis: "c1a2e182896f97a76b6d89d1ac658e3c000494fa",
+            rabinApis,
+          },
+        ])
+        .then((res) => console.log("transferAll", res));
     </script>
   </body>
 </html>

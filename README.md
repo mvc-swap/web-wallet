@@ -30,7 +30,7 @@ const transferFtTres = await mvc.transferSensibleFt({
   genesis: "genesis",
 });
 const transferAll = await mvc.transferAll([{
-    receivers: [{ address: "xxx", amount: 344 }],
+  receivers: [{ address: "xxx", amount: 344 }],
   codehash: "codehash",
   genesis: "genesis",
 }])

@@ -1,6 +1,6 @@
 import { mvc, toHex, signTx } from 'mvc-scrypt';
 import { NetWork } from '../web3';
-import {Key, SensibleFt, SensibleSatotx, TransferReceiver, MvcUtxo} from '../state/stateType'
+import {Key, SensibleFt, TransferReceiver, MvcUtxo} from '../state/stateType'
 import axios from 'axios'
 import {SensibleFT} from 'meta-contract'
 import * as util from './util'
@@ -279,14 +279,14 @@ const mapMvcFeeError = (err: Error) => {
     }
     return err
 }
-const getCustomSigners = (codehash: string, genesis: string):SensibleSatotx[] => {
+const getCustomSigners = (codehash: string, genesis: string):any[] => {
     const findValue = customSatotxList.find(item => item.codehash === codehash && item.genesis === genesis)
     if (findValue) {
         return findValue.satotxList
     }
     return []
 }
-const selectNotNullSigners = (...signerList: SensibleSatotx[][]): SensibleSatotx[] =>  {
+const selectNotNullSigners = (...signerList: any[][]): any[] =>  {
     for (let signers of signerList) {
         if (signers && signers.length > 0) {
             return signers
@@ -294,7 +294,7 @@ const selectNotNullSigners = (...signerList: SensibleSatotx[][]): SensibleSatotx
     }
     return []
 }
-export async function transferSensibleFt(network: NetWork, signers: SensibleSatotx[], senderWif: string, receivers: TransferReceiver[], codehash: string, genesis: string, utxos: any = false, noBroadcast: boolean = false){
+export async function transferSensibleFt(network: NetWork, signers: any[], senderWif: string, receivers: TransferReceiver[], codehash: string, genesis: string, utxos: any = false, noBroadcast: boolean = false){
     
     const customSigner = getCustomSigners(codehash, genesis)
     signers = selectNotNullSigners(signers, customSigner)

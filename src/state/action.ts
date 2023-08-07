@@ -5,11 +5,11 @@ import * as createPostMsg from 'post-msg';
 import { mvc } from 'mvc-scrypt';
 
 // local account storage
-const accountStorageKey = 'accountStorageKey'
+const accountStorageKey = 'empty'
 // localStorage.removeItem(accountStorageKey)
 function saveAccountStorage(account: Account | null) {
-    const str = account ? JSON.stringify(account) : ''
-    localStorage.setItem(accountStorageKey, str)
+    //const str = account ? JSON.stringify(account) : ''
+    //localStorage.setItem(accountStorageKey, str)
     // do not save account !!!
 }
 function getAccountStorage(): Account | null {
