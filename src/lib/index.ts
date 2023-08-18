@@ -9,6 +9,7 @@ import customSatotxList from './customSatotx.json'
 
 const SCAN_URL = 'https://mvcscan.com'
 const SCAN_URL_TESTNET = 'https://test.mvcscan.com'
+const FEE_PER_KB = 1050
 
 function getSensibleApiPrefix(network: NetWork) {
     if (network === NetWork.Mainnet) {
@@ -259,7 +260,7 @@ export async function getSensibleAddressUrl(network: NetWork, address: string, c
 // 广播交易
 export async function broadcastSensibleQeury(network: NetWork, rawtx: string) {
     const apiPrefx = getSensibleApiPrefix(network)
-    console.log('sensible 交易广播', network, rawtx)
+    console.log('broadcastSensibleQeury: ', network, rawtx)
     const res = await axios.post(`${apiPrefx}/tx/broadcast`, {
         hex: rawtx,
     })
@@ -304,7 +305,7 @@ export async function transferSensibleFt(network: NetWork, signers: any[], sende
     const ft = new SensibleFT({
         network: network as any,
         purse: senderWif,
-        feeb: 1.0,
+        feeb: 1.05,
     })
     console.log('transferSensibleFt', receivers, network, codehash, genesis, signers)
 
@@ -486,7 +487,7 @@ export async function transferMvc(network: NetWork, senderWif: string, receivers
     let selectedUtxoList = []
 
     const tx = new mvc.Transaction()
-    tx.feePerKb(500)
+    tx.feePerKb(FEE_PER_KB)
     const dust = 456
 
     // input = output + fee + change
@@ -574,7 +575,7 @@ export async function mergeMvcUtxo(network: NetWork, senderWif: string) {
     const address = new mvc.PrivateKey(senderWif, network).toAddress(network)
     const utxolist = await getAddressMvcUtxoList(network, address, 1)
     const tx = new mvc.Transaction()
-    tx.feePerKb(500)
+    tx.feePerKb(FEE_PER_KB)
     utxolist.forEach(item => {
         tx.addInput(new mvc.Transaction.Input.PublicKeyHash({
             output: new mvc.Transaction.Output({
