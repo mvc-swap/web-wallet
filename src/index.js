@@ -33,7 +33,7 @@ import { mvc } from "mvc-scrypt";
 
 const isIframe = window === window.top;
 
-Sentry.init({
+/*Sentry.init({
   dsn: "https://d223c2a1d1bf44b6a657051ac9a99b16@o877284.ingest.sentry.io/5827823",
   integrations: [new Integrations.BrowserTracing()],
 
@@ -41,7 +41,7 @@ Sentry.init({
   // of transactions for performance monitoring.
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
-});
+});*/
 
 if (isIframe) {
   ReactDOM.render(

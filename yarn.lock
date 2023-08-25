@@ -8028,13 +8028,12 @@
   "resolved" "https://registry.npmjs.org/merge2/-/merge2-1.4.1.tgz"
   "version" "1.4.1"
 
-"meta-contract@^0.3.16":
-  "integrity" "sha512-LVXTEZCanvh+t+Pj5k/s275DKjlS3XHLF7ZbgsYUnLorBKM4x6mPk3c0Cgo1Atw53KIRGsLTyKqfn292ZIUNww=="
-  "resolved" "https://registry.npmjs.org/meta-contract/-/meta-contract-0.3.16.tgz"
-  "version" "0.3.16"
+"meta-contract@^0.3.29":
+  "integrity" "sha512-8WrJSaCoHxvGl2IVuEw3lWBXjvdWxhK6Y4pVD57F5G4Xie6t24BDDGFTXJe77hyOoz/e9OzPK2UzfDdMklrzSQ=="
+  "resolved" "https://registry.npmjs.org/meta-contract/-/meta-contract-0.3.29.tgz"
+  "version" "0.3.29"
   dependencies:
-    "mvc-scrypt" "0.1.1"
-    "mvc-scryptlib" "^1.0.0"
+    "mvc-scrypt" "^0.1.2"
     "node-fetch" "2"
 
 "methods@~1.1.2":
@@ -8320,10 +8319,10 @@
     "inherits" "2.0.3"
     "unorm" "1.4.1"
 
-"mvc-scrypt@^0.1.0", "mvc-scrypt@0.1.1":
-  "integrity" "sha512-csJ5QVontTNHTRKR/Mmh9r0JMg6vBFoEFa99Ey5D/9BwhoxFQ73/jtvzEC6WcG9xsWoLwisVh65WXN418sKsYw=="
-  "resolved" "https://registry.npmjs.org/mvc-scrypt/-/mvc-scrypt-0.1.1.tgz"
-  "version" "0.1.1"
+"mvc-scrypt@^0.1.0", "mvc-scrypt@^0.1.2":
+  "integrity" "sha512-yh7U0erzHSkAClzA41z2u6Zk2foxUn7ybgBWf5LaAz0159TaogsDmiC9pEGRsrUKA80TOkbfmKOC2PzDzVwqJw=="
+  "resolved" "https://registry.npmjs.org/mvc-scrypt/-/mvc-scrypt-0.1.6.tgz"
+  "version" "0.1.6"
   dependencies:
     "@discoveryjs/json-ext" "^0.5.7"
     "compare-versions" "^3.6.0"
@@ -8333,18 +8332,6 @@
     "node-fetch" "^3.0.0"
     "patch-package" "^6.4.7"
     "sourcemap-codec" "^1.4.8"
-
-"mvc-scryptlib@^1.0.0":
-  "integrity" "sha512-xyOXh20kwyQRc4yAmgxg4vMCquYFozo3gjBkSf8bK8zx1mTzmo07+NXO0HXpE0UhMSo/Tz6l2USk6TIfG7KhMg=="
-  "resolved" "https://registry.npmjs.org/mvc-scryptlib/-/mvc-scryptlib-1.0.0.tgz"
-  "version" "1.0.0"
-  dependencies:
-    "compare-versions" "^3.6.0"
-    "json-bigint" "^1.0.0"
-    "md5" "^2.2.1"
-    "mvc-lib" "^1.0.5"
-    "node-fetch" "^3.0.0"
-    "patch-package" "^6.4.7"
 
 "nanoid@^3.3.4":
   "integrity" "sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw=="
