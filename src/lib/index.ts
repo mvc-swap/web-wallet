@@ -162,7 +162,6 @@ export async function getAddressSensibleFtListByPage(network: NetWork, address: 
 
 // 获取 mvc utxo
 export async function getAddressMvcUtxoList(network: NetWork, address: string, page: number, pageSize: number=16): Promise<MvcUtxo[]> {
-    const cursor = (page - 1) * pageSize
     const apiPrefix = getSensibleApiPrefix(network)
     const res = await axios.get(`${apiPrefix}/address/${address}/utxo`)
     const success = isSensibleSuccess(res)
@@ -215,7 +214,7 @@ export async function getAddressMvcUtxoList(network: NetWork, address: string, p
 export async function getAddressMvcBalance(network: NetWork, address: string): Promise<string> {
     const apiPrefix = getSensibleApiPrefix(network)
     const res = await axios.get(`${apiPrefix}/address/${address}/balance`)
-    if (res.status == 200) {
+    if (res.status === 200) {
         return util.plus(res.data.confirmed, res.data.unconfirmed)
     }
     throw new Error(res.statusText)

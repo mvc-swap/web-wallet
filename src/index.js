@@ -4,10 +4,6 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import * as actions from "./state/action";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import { SensibleApi } from "meta-contract";
-import { mvc } from "mvc-scrypt";
 
 (function () {
   /*const originBroadcast = SensibleApi.prototype.broadcast;
