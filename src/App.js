@@ -1192,7 +1192,7 @@ function TransferPanel({
           <div className="transfer-line">Codehash: {token.codehash}</div>
         )}
         {!isMvc && (
-          <div className="transfer-line">SensibleId: {token.sensibleId}</div>
+          <div className="transfer-line">tokenID: {token.sensibleId}</div>
         )}
         <Row justify="space-between" style={{ margin: "10px 0" }}>
           <Col span={14}>
