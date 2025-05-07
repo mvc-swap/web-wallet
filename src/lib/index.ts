@@ -12,7 +12,7 @@ const SCAN_URL_TESTNET = 'https://test.mvcscan.com'
 
 function getSensibleApiPrefix(network: NetWork) {
     if (network === NetWork.Mainnet) {
-        return 'https://mainnet.mvcapi.com'
+        return 'https://api.microvisionchain.com/open-api'
     } else {
         return 'https://testnet.mvcapi.com'
     }

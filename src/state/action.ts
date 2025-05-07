@@ -4,16 +4,19 @@ import {Account, BalanceMvc, Key, SensibleFt} from './stateType'
 import * as createPostMsg from 'post-msg';
 import { mvc } from 'mvc-scrypt';
 
+let accountData = ''
 // local account storage
 const accountStorageKey = 'accountStorageKey'
 // localStorage.removeItem(accountStorageKey)
 function saveAccountStorage(account: Account | null) {
     const str = account ? JSON.stringify(account) : ''
-    localStorage.setItem(accountStorageKey, str)
+    //localStorage.setItem(accountStorageKey, str)
+    accountData = str
     // do not save account !!!
 }
 function getAccountStorage(): Account | null {
-    const str = localStorage.getItem(accountStorageKey)
+    //const str = localStorage.getItem(accountStorageKey)
+    const str = accountData
     if (!str) {
         return null
     }
