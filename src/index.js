@@ -4,10 +4,6 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import * as actions from "./state/action";
-import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
-import { SensibleApi } from "meta-contract";
-import { mvc } from "mvc-scrypt";
 
 (function () {
   /*const originBroadcast = SensibleApi.prototype.broadcast;
@@ -33,7 +29,7 @@ import { mvc } from "mvc-scrypt";
 
 const isIframe = window === window.top;
 
-Sentry.init({
+/*Sentry.init({
   dsn: "https://d223c2a1d1bf44b6a657051ac9a99b16@o877284.ingest.sentry.io/5827823",
   integrations: [new Integrations.BrowserTracing()],
 
@@ -41,7 +37,7 @@ Sentry.init({
   // of transactions for performance monitoring.
   // We recommend adjusting this value in production
   tracesSampleRate: 1.0,
-});
+});*/
 
 if (isIframe) {
   ReactDOM.render(

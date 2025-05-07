@@ -70,10 +70,10 @@ export function toString(a: NumberDuck): string {
 }
 
 export function checkFeeRate(tx: any, minFeeRate?: number) {
-    minFeeRate = minFeeRate || 0.5
+    minFeeRate = minFeeRate || 1.0
     const size = tx.toBuffer().length
     const feeRate = tx.getFee() / size;
-    if (feeRate < minFeeRate) {
+    if (feeRate < minFeeRate && feeRate  < 10) {
         const msg = `The fee rate should not be less than ${minFeeRate}, but in the end it is ${feeRate}`
         message.error(msg)
         throw new Error(msg)
