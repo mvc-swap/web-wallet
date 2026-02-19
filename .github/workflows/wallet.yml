@@ -44,6 +44,6 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: build
-          token: ${{ secrets.MVCSWAP_DEPLOY_KEY }}
+          ssh-key: ${{ secrets.MVCSWAP_DEPLOY_KEY }}
           branch: gh-page
           repository-name: mvc-swap/wallet.mvcswap.com
