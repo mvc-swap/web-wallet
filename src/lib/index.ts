@@ -2,7 +2,7 @@ import { mvc, toHex, signTx } from 'mvc-scrypt';
 import { NetWork } from '../web3';
 import {Key, SensibleFt, TransferReceiver, MvcUtxo} from '../state/stateType'
 import axios from 'axios'
-import {SensibleFT} from 'meta-contract'
+import {SensibleFT, API_TARGET} from 'meta-contract'
 import * as util from './util'
 import * as Sentry from "@sentry/react";
 import customSatotxList from './customSatotx.json'
@@ -303,6 +303,7 @@ export async function transferSensibleFt(network: NetWork, signers: any[], sende
     
     const ft = new SensibleFT({
         network: network as any,
+        apiTarget: API_TARGET.APIMVC,
         purse: senderWif,
         feeb: 1.05,
     })
